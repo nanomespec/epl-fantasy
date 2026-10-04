@@ -1,188 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ethio Premier Fantasy</title>
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethio Premier Fantasy - Phase 1 Pitch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #1a1a24; color: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    
+    .header { width: 100%; max-width: 800px; text-align: center; margin-bottom: 15px; }
+    .header h1 { color: #00ff87; margin-bottom: 5px; }
+    .formation-badge { display: inline-block; background: #38003c; color: #00ff87; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; }
+
+    .status-msg { width: 100%; max-width: 800px; padding: 10px; margin-bottom: 15px; border-radius: 6px; text-align: center; font-weight: 600; display: none; }
+    .status-msg.error { background: #ff4757; color: #fff; display: block; }
+    .status-msg.success { background: #2ed573; color: #000; display: block; }
+
+    /* Visual Pitch Styling */
+    .pitch-container { width: 100%; max-width: 800px; background: linear-gradient(180deg, #118140 0%, #0c6130 100%); border-radius: 12px; border: 3px solid #2ed573; padding: 20px 10px; display: flex; flex-direction: column; gap: 20px; min-height: 520px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .pitch-line { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; }
+
+    /* Bench Container */
+    .bench-container { width: 100%; max-width: 800px; background: #242432; border-radius: 12px; padding: 15px; margin-top: 15px; }
+    .bench-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 10px; text-align: center; }
+    .bench-line { display: flex; justify-content: space-around; align-items: center; }
+
+    /* Player Cards */
+    .player-card { background: rgba(255, 255, 255, 0.95); color: #111; width: 110px; border-radius: 8px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all 0.2s ease; position: relative; user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .player-card:hover { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0,0,0,0.4); }
+    .player-card.selected { border: 3px solid #00ff87; background: #e0ffb3; transform: scale(1.05); }
+
+    .position-tag { font-size: 0.7rem; font-weight: bold; color: #555; text-transform: uppercase; }
+    .player-name { font-size: 0.85rem; font-weight: bold; margin: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .role-badge { position: absolute; top: -6px; right: -6px; background: #38003c; color: #00ff87; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1px solid #00ff87; }
+    
+    .card-actions { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
+    .btn-badge { background: #38003c; color: #fff; border: none; padding: 2px 5px; font-size: 0.65rem; border-radius: 3px; cursor: pointer; font-weight: bold; }
+    .btn-badge:hover { background: #00ff87; color: #38003c; }
+
+    .controls-panel { margin-top: 20px; display: flex; gap: 10px; }
+    .action-btn { background: #00ff87; color: #38003c; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .action-btn:hover { background: #00cc6a; }
+  </style>
 </head>
 <body>
 
-    <!-- FPL TOP BANNER -->
-    <header class="fpl-header">
-        <div class="brand-bar">
-            <h1>ETHIO PREMIER FANTASY</h1>
-            <span id="manager-display" class="manager-badge">Manager: Nate</span>
-        </div>
-        
-        <!-- SQUAD STATUS BAR -->
-        <div class="status-bar">
-            <div class="stat-item">
-                <span class="label">Players</span>
-                <strong id="count-val" class="val">0 / 15</strong>
-            </div>
-            <div class="stat-item highlight">
-                <span class="label">In the Bank</span>
-                <strong id="bank-val" class="val">£100.0m</strong>
-            </div>
-            <div class="stat-item">
-                <span class="label">Gameweek</span>
-                <strong class="val">GW 1</strong>
-            </div>
-        </div>
-    </header>
+  <div class="header">
+    <h1>Ethio Premier Fantasy</h1>
+    <div id="formation-badge" class="formation-badge">Formation: 4-4-2</div>
+  </div>
 
-    <!-- ACTION CONTROLS BAR -->
-    <div class="action-bar">
-        <button id="autopick-btn" class="action-btn secondary">Auto Pick</button>
-        <button id="reset-btn" class="action-btn danger">Reset</button>
-        <button id="enter-btn" class="action-btn primary" disabled>Enter Squad</button>
-    </div>
+  <div id="status-msg" class="status-msg"></div>
 
-    <!-- MAIN PITCH AREA (11 STARTERS) -->
-    <main class="pitch-viewport">
-        <div class="fpl-pitch">
-            
-            <!-- GOALKEEPER ROW (1 Slot) -->
-            <div class="pitch-row">
-                <div class="slot-wrapper" data-slot-id="1" data-pos="GKP">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">GKP</span>
-                    </div>
-                </div>
-            </div>
+  <div class="pitch-container">
+    <div id="pitch-gkp" class="pitch-line"></div>
+    <div id="pitch-def" class="pitch-line"></div>
+    <div id="pitch-mid" class="pitch-line"></div>
+    <div id="pitch-fwd" class="pitch-line"></div>
+  </div>
 
-            <!-- DEFENDERS ROW (4 Slots) -->
-            <div class="pitch-row">
-                <div class="slot-wrapper" data-slot-id="2" data-pos="DEF">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">DEF</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="3" data-pos="DEF">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">DEF</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="4" data-pos="DEF">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">DEF</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="5" data-pos="DEF">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">DEF</span>
-                    </div>
-                </div>
-            </div>
+  <div class="bench-container">
+    <div class="bench-title">Bench (Order: GKP | Bench 1 | Bench 2 | Bench 3)</div>
+    <div id="bench-line" class="bench-line"></div>
+  </div>
 
-            <!-- MIDFIELDERS ROW (4 Slots) -->
-            <div class="pitch-row">
-                <div class="slot-wrapper" data-slot-id="6" data-pos="MID">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">MID</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="7" data-pos="MID">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">MID</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="8" data-pos="MID">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">MID</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="9" data-pos="MID">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">MID</span>
-                    </div>
-                </div>
-            </div>
+  <div class="controls-panel">
+    <button id="btn-auto-sub" class="action-btn">Simulate Gameweek Auto-Subs</button>
+  </div>
 
-            <!-- FORWARDS ROW (2 Slots) -->
-            <div class="pitch-row">
-                <div class="slot-wrapper" data-slot-id="10" data-pos="FWD">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">FWD</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="11" data-pos="FWD">
-                    <div class="player-slot empty">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">FWD</span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- BENCH PANEL (4 SUBS: 1 GKP, 1 DEF, 1 MID, 1 FWD) -->
-        <div class="bench-panel">
-            <div class="bench-header">
-                <span>SUBSTITUTES</span>
-            </div>
-            <div class="bench-row">
-                <div class="slot-wrapper" data-slot-id="12" data-pos="GKP">
-                    <div class="player-slot empty bench-slot">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">GKP</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="13" data-pos="DEF">
-                    <div class="player-slot empty bench-slot">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">DEF</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="14" data-pos="MID">
-                    <div class="player-slot empty bench-slot">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">MID</span>
-                    </div>
-                </div>
-                <div class="slot-wrapper" data-slot-id="15" data-pos="FWD">
-                    <div class="player-slot empty bench-slot">
-                        <div class="plus-btn">+</div>
-                        <span class="pos-tag">FWD</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- TRANSFER MARKET MODAL / SLIDE-UP PANEL -->
-    <div id="market-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Select Player</h3>
-                <button id="close-modal" class="close-btn">&times;</button>
-            </div>
-            
-            <!-- MARKET FILTERS -->
-            <div id="market-filters" class="market-filters">
-                <input type="text" id="search-input" placeholder="Search player name..." class="filter-input">
-                <select id="club-select" class="filter-select">
-                    <option value="ALL">All Clubs</option>
-                </select>
-            </div>
-
-            <div id="market-list" class="market-list"></div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
