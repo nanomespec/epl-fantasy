@@ -1,9 +1,11 @@
 /**
- * Fantasy Premier League Squad Manager - Complete Phase 1 Logic & UI Engine
+ * Fantasy Premier League Squad Manager - Phase 1 Complete Integration
+ * Features: Dynamic Formations, Starter/Bench Swaps, Captain/Vice-Captain Rules,
+ *           Auto-Substitutions Engine, and DOM Pitch Renderer.
  */
 
 class FantasySquadManager {
-  constructor(initialSquad) {
+  constructor(initialSquad = { starters: [], bench: [] }) {
     this.squad = {
       starters: initialSquad.starters || [],
       bench: initialSquad.bench || []
@@ -18,12 +20,19 @@ class FantasySquadManager {
   }
 
   _findPlayerIndex(playerList, targetId) {
+    if (!Array.isArray(playerList)) return -1;
     return playerList.findIndex(p => p && String(p.id) === String(targetId));
   }
 
+  /**
+   * Validates if starting 11 satisfies official FPL formation bounds.
+   */
   isValidFormation(starters = this.squad.starters) {
     if (!Array.isArray(starters) || starters.length !== this.FORMATION_RULES.TOTAL_STARTERS) {
-      return { valid: false, reason: `Starting lineup must contain exactly ${this.FORMATION_RULES.TOTAL_STARTERS} players.` };
+      return { 
+        valid: false, 
+        reason: `Starting lineup must contain exactly ${this.FORMATION_RULES.TOTAL_STARTERS} players.` 
+      };
     }
 
     const counts = starters.reduce((acc, player) => {
@@ -54,6 +63,9 @@ class FantasySquadManager {
     };
   }
 
+  /**
+   * Swaps a starting player with a bench player.
+   */
   swapStarterWithBench(starterId, benchId) {
     const starters = [...this.squad.starters];
     const bench = [...this.squad.bench];
@@ -61,8 +73,11 @@ class FantasySquadManager {
     const starterIdx = this._findPlayerIndex(starters, starterId);
     const benchIdx = this._findPlayerIndex(bench, benchId);
 
-    if (starterIdx === -1 || benchIdx === -1) {
-      return { success: false, message: "Selected player not found in lineup or bench." };
+    if (starterIdx === -1) {
+      return { success: false, message: "Selected starter not found in lineup." };
+    }
+    if (benchIdx === -1) {
+      return { success: false, message: "Selected bench player not found." };
     }
 
     const candidateStarter = bench[benchIdx];
@@ -84,6 +99,9 @@ class FantasySquadManager {
     return { success: true, formation: validation.formation, squad: this.squad };
   }
 
+  /**
+   * Assigns Captain (C) and Vice-Captain (VC) roles.
+   */
   setCaptainAndVice(captainId, viceCaptainId) {
     if (String(captainId) === String(viceCaptainId)) {
       return { success: false, message: "Captain and Vice-Captain cannot be the same player." };
@@ -105,43 +123,46 @@ class FantasySquadManager {
     return { success: true, squad: this.squad };
   }
 
+  /**
+   * Executes automatic substitutions for 0-minute starters.
+   */
   processAutoSubstitutions(matchStats = {}) {
     let starters = this.squad.starters.map(p => ({ ...p }));
     let bench = this.squad.bench.map(p => ({ ...p }));
     const subsPerformed = [];
 
-    // GKP Substitution
-    const startingGkpIdx = starters.findIndex(p => p.position === 'GKP');
-    const benchGkpIdx = bench.findIndex(p => p.position === 'GKP');
+    // 1. Goalkeeper substitution
+    const startingGkpIdx = starters.findIndex(p => String(p.position).toUpperCase() === 'GKP');
+    const benchGkpIdx = bench.findIndex(p => String(p.position).toUpperCase() === 'GKP');
 
     if (startingGkpIdx !== -1 && benchGkpIdx !== -1) {
       const startingGkp = starters[startingGkpIdx];
       const benchGkp = bench[benchGkpIdx];
 
-      const gkpMins = matchStats[startingGkp.id]?.minutes ?? 0;
-      const benchGkpMins = matchStats[benchGkp.id]?.minutes ?? 0;
+      const gkpMins = matchStats[startingGkp.id]?.minutes ?? matchStats[String(startingGkp.id)]?.minutes ?? 0;
+      const benchGkpMins = matchStats[benchGkp.id]?.minutes ?? matchStats[String(benchGkp.id)]?.minutes ?? 0;
 
       if (gkpMins === 0 && benchGkpMins > 0) {
         starters[startingGkpIdx] = benchGkp;
         bench[benchGkpIdx] = startingGkp;
-        subsPerformed.push(`Substituted GKP: ${benchGkp.name} in for ${startingGkp.name}`);
+        subsPerformed.push({ type: "GKP", out: startingGkp, in: benchGkp });
       }
     }
 
-    // Outfield Substitutions
+    // 2. Outfield substitutions
     const benchUsed = new Array(bench.length).fill(false);
 
     for (let i = 0; i < starters.length; i++) {
       const starter = starters[i];
-      if (starter.position === 'GKP') continue;
+      if (String(starter.position).toUpperCase() === 'GKP') continue;
 
-      const starterMins = matchStats[starter.id]?.minutes ?? 0;
+      const starterMins = matchStats[starter.id]?.minutes ?? matchStats[String(starter.id)]?.minutes ?? 0;
       if (starterMins === 0) {
         for (let j = 0; j < bench.length; j++) {
           const benchPlayer = bench[j];
-          if (benchPlayer.position === 'GKP' || benchUsed[j]) continue;
+          if (String(benchPlayer.position).toUpperCase() === 'GKP' || benchUsed[j]) continue;
 
-          const benchMins = matchStats[benchPlayer.id]?.minutes ?? 0;
+          const benchMins = matchStats[benchPlayer.id]?.minutes ?? matchStats[String(benchPlayer.id)]?.minutes ?? 0;
           if (benchMins === 0) continue;
 
           const testStarters = [...starters];
@@ -149,7 +170,7 @@ class FantasySquadManager {
 
           if (this.isValidFormation(testStarters).valid) {
             benchUsed[j] = true;
-            subsPerformed.push(`Substituted ${benchPlayer.position}: ${benchPlayer.name} in for ${starter.name}`);
+            subsPerformed.push({ type: "OUTFIELD", out: starter, in: benchPlayer });
             starters[i] = benchPlayer;
             bench[j] = starter;
             break;
@@ -158,22 +179,22 @@ class FantasySquadManager {
       }
     }
 
-    // Captain Fallback
+    // 3. Captain fallback
     const capIdx = starters.findIndex(p => p.isCaptain);
     if (capIdx !== -1) {
       const captain = starters[capIdx];
-      const capMins = matchStats[captain.id]?.minutes ?? 0;
+      const capMins = matchStats[captain.id]?.minutes ?? matchStats[String(captain.id)]?.minutes ?? 0;
 
       if (capMins === 0) {
         const viceIdx = starters.findIndex(p => p.isViceCaptain);
         if (viceIdx !== -1) {
           const vice = starters[viceIdx];
-          const viceMins = matchStats[vice.id]?.minutes ?? 0;
+          const viceMins = matchStats[vice.id]?.minutes ?? matchStats[String(vice.id)]?.minutes ?? 0;
 
           if (viceMins > 0) {
             starters[capIdx].isCaptain = false;
             starters[viceIdx].isCaptain = true;
-            subsPerformed.push(`Captain ${captain.name} played 0 mins. Armband moved to Vice-Captain ${vice.name}.`);
+            subsPerformed.push({ type: "CAPTAIN_FALLBACK", from: captain, to: vice });
           }
         }
       }
@@ -184,10 +205,10 @@ class FantasySquadManager {
   }
 }
 
-// -------------------------------------------------------------
-// UI CONTROLLER AND DOM RENDERER
-// -------------------------------------------------------------
-class FantasyUIController {
+/**
+ * UI Bridge - Binds squad manager safely to DOM elements if present
+ */
+class FantasyUIBridge {
   constructor(manager) {
     this.manager = manager;
     this.selectedPlayer = null;
@@ -202,21 +223,12 @@ class FantasyUIController {
     const autoSubBtn = document.getElementById('btn-auto-sub');
     if (autoSubBtn) {
       autoSubBtn.addEventListener('click', () => {
-        // Mock match stats where 2 starters played 0 minutes
-        const mockMatchStats = {
-          2: { minutes: 0 },  // Gabriel played 0 mins
-          6: { minutes: 0 },  // Saka (C) played 0 mins
-          13: { minutes: 90 }, // Rogers (Bench) played 90 mins
-          14: { minutes: 90 }, // Konsa (Bench) played 90 mins
-          7: { minutes: 90 }   // Palmer (VC) played 90 mins
-        };
+        const mockStats = {};
+        this.manager.squad.starters.slice(0, 2).forEach(p => { mockStats[p.id] = { minutes: 0 }; });
+        this.manager.squad.bench.forEach(p => { mockStats[p.id] = { minutes: 90 }; });
 
-        const result = this.manager.processAutoSubstitutions(mockMatchStats);
-        if (result.subsPerformed.length > 0) {
-          this.showMessage(`Auto-Subs Completed: ${result.subsPerformed.join(' | ')}`, 'success');
-        } else {
-          this.showMessage('No auto-substitutions required.', 'success');
-        }
+        const res = this.manager.processAutoSubstitutions(mockStats);
+        this.showMessage(`Auto-subs evaluated. Executed: ${res.subsPerformed.length}`, 'success');
         this.render();
       });
     }
@@ -226,23 +238,23 @@ class FantasyUIController {
     const el = document.getElementById('status-msg');
     if (el) {
       el.className = `status-msg ${type}`;
+      el.style.display = 'block';
       el.textContent = msg;
       setTimeout(() => { el.style.display = 'none'; }, 4000);
+    } else {
+      console.log(`[${type.toUpperCase()}] ${msg}`);
     }
   }
 
   handlePlayerClick(player, isStarter) {
     if (!this.selectedPlayer) {
-      // First selection
       this.selectedPlayer = { player, isStarter };
       this.render();
       return;
     }
 
-    // Second selection - attempt swap if one is starter and one is bench
     const first = this.selectedPlayer;
     if (first.isStarter === isStarter) {
-      // Re-select if clicking another player in the same group
       this.selectedPlayer = { player, isStarter };
       this.render();
       return;
@@ -254,8 +266,6 @@ class FantasyUIController {
     const swapResult = this.manager.swapStarterWithBench(starterId, benchId);
     if (!swapResult.success) {
       this.showMessage(swapResult.message, 'error');
-    } else {
-      this.showMessage(`Swapped ${first.player.name} with ${player.name}`, 'success');
     }
 
     this.selectedPlayer = null;
@@ -284,14 +294,14 @@ class FantasyUIController {
     this.render();
   }
 
-  createPlayerCard(player, isStarter) {
+  createCard(player, isStarter) {
     const card = document.createElement('div');
-    const isSelected = this.selectedPlayer && this.selectedPlayer.player.id === player.id;
+    const isSelected = this.selectedPlayer && String(this.selectedPlayer.player.id) === String(player.id);
     card.className = `player-card ${isSelected ? 'selected' : ''}`;
 
-    let roleBadgeHtml = '';
-    if (player.isCaptain) roleBadgeHtml = '<div class="role-badge">C</div>';
-    if (player.isViceCaptain) roleBadgeHtml = '<div class="role-badge">VC</div>';
+    let roleHtml = '';
+    if (player.isCaptain) roleHtml = '<div class="role-badge">C</div>';
+    if (player.isViceCaptain) roleHtml = '<div class="role-badge">VC</div>';
 
     let actionsHtml = '';
     if (isStarter) {
@@ -304,9 +314,9 @@ class FantasyUIController {
     }
 
     card.innerHTML = `
-      ${roleBadgeHtml}
+      ${roleHtml}
       <div class="position-tag">${player.position}</div>
-      <div class="player-name">${player.name}</div>
+      <div class="player-name">${player.name || 'Player'}</div>
       ${actionsHtml}
     `;
 
@@ -326,14 +336,12 @@ class FantasyUIController {
   }
 
   render() {
-    // Render Formation
     const validation = this.manager.isValidFormation();
     const formationBadge = document.getElementById('formation-badge');
     if (formationBadge && validation.valid) {
       formationBadge.textContent = `Formation: ${validation.formation}`;
     }
 
-    // Clear Pitch Lines
     const lines = {
       GKP: document.getElementById('pitch-gkp'),
       DEF: document.getElementById('pitch-def'),
@@ -344,49 +352,26 @@ class FantasyUIController {
 
     Object.values(lines).forEach(el => { if (el) el.innerHTML = ''; });
 
-    // Render Starters on Pitch Lines
     this.manager.squad.starters.forEach(player => {
       const pos = String(player.position).toUpperCase();
       if (lines[pos]) {
-        lines[pos].appendChild(this.createPlayerCard(player, true));
+        lines[pos].appendChild(this.createCard(player, true));
       }
     });
 
-    // Render Bench Players
     this.manager.squad.bench.forEach(player => {
       if (lines.BENCH) {
-        lines.BENCH.appendChild(this.createPlayerCard(player, false));
+        lines.BENCH.appendChild(this.createCard(player, false));
       }
     });
   }
 }
 
-// Sample Squad Initialization
-const initialSquadData = {
-  starters: [
-    { id: 1, name: "Raya", position: "GKP", isCaptain: false, isViceCaptain: false },
-    { id: 2, name: "Gabriel", position: "DEF", isCaptain: false, isViceCaptain: false },
-    { id: 3, name: "Saliba", position: "DEF", isCaptain: false, isViceCaptain: false },
-    { id: 4, name: "Alexander-Arnold", position: "DEF", isCaptain: false, isViceCaptain: false },
-    { id: 5, name: "Gvardiol", position: "DEF", isCaptain: false, isViceCaptain: false },
-    { id: 6, name: "Saka", position: "MID", isCaptain: true, isViceCaptain: false },
-    { id: 7, name: "Palmer", position: "MID", isCaptain: false, isViceCaptain: true },
-    { id: 8, name: "Salah", position: "MID", isCaptain: false, isViceCaptain: false },
-    { id: 9, name: "Gordon", position: "MID", isCaptain: false, isViceCaptain: false },
-    { id: 10, name: "Haaland", position: "FWD", isCaptain: false, isViceCaptain: false },
-    { id: 11, name: "Watkins", position: "FWD", isCaptain: false, isViceCaptain: false }
-  ],
-  bench: [
-    { id: 12, name: "Neto", position: "GKP", isCaptain: false, isViceCaptain: false },
-    { id: 13, name: "Rogers", position: "MID", isCaptain: false, isViceCaptain: false },
-    { id: 14, name: "Konsa", position: "DEF", isCaptain: false, isViceCaptain: false },
-    { id: 15, name: "Joao Pedro", position: "FWD", isCaptain: false, isViceCaptain: false }
-  ]
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  const manager = new FantasySquadManager(initialSquadData);
-  const ui = new FantasyUIController(manager);
-  ui.init();
-});
-
+// Global Export
+if (typeof window !== 'undefined') {
+  window.FantasySquadManager = FantasySquadManager;
+  window.FantasyUIBridge = FantasyUIBridge;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { FantasySquadManager, FantasyUIBridge };
+}
