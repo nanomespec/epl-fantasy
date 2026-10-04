@@ -3,72 +3,253 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ethio Premier Fantasy - Phase 1 Pitch</title>
+  <title>EPL Fantasy Squad Pitch</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #1a1a24; color: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    
-    .header { width: 100%; max-width: 800px; text-align: center; margin-bottom: 15px; }
-    .header h1 { color: #00ff87; margin-bottom: 5px; }
-    .formation-badge { display: inline-block; background: #38003c; color: #00ff87; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    .status-msg { width: 100%; max-width: 800px; padding: 10px; margin-bottom: 15px; border-radius: 6px; text-align: center; font-weight: 600; display: none; }
-    .status-msg.error { background: #ff4757; color: #fff; display: block; }
-    .status-msg.success { background: #2ed573; color: #000; display: block; }
+    body {
+      background-color: #121218;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
 
-    /* Visual Pitch Styling */
-    .pitch-container { width: 100%; max-width: 800px; background: linear-gradient(180deg, #118140 0%, #0c6130 100%); border-radius: 12px; border: 3px solid #2ed573; padding: 20px 10px; display: flex; flex-direction: column; gap: 20px; min-height: 520px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-    .pitch-line { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; }
+    /* Top Navigation Header */
+    .header {
+      width: 100%;
+      max-width: 850px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 10px;
+    }
 
-    /* Bench Container */
-    .bench-container { width: 100%; max-width: 800px; background: #242432; border-radius: 12px; padding: 15px; margin-top: 15px; }
-    .bench-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 10px; text-align: center; }
-    .bench-line { display: flex; justify-content: space-around; align-items: center; }
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #00ff87;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-    /* Player Cards */
-    .player-card { background: rgba(255, 255, 255, 0.95); color: #111; width: 110px; border-radius: 8px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all 0.2s ease; position: relative; user-select: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    .player-card:hover { transform: translateY(-4px); box-shadow: 0 8px 15px rgba(0,0,0,0.4); }
-    .player-card.selected { border: 3px solid #00ff87; background: #e0ffb3; transform: scale(1.05); }
+    .formation-badge {
+      background: #38003c;
+      color: #00ff87;
+      border: 1px solid #00ff87;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
 
-    .position-tag { font-size: 0.7rem; font-weight: bold; color: #555; text-transform: uppercase; }
-    .player-name { font-size: 0.85rem; font-weight: bold; margin: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Notification / Message Banner */
+    .status-banner {
+      width: 100%;
+      max-width: 850px;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
 
-    .role-badge { position: absolute; top: -6px; right: -6px; background: #38003c; color: #00ff87; border-radius: 50%; width: 22px; height: 22px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1px solid #00ff87; }
-    
-    .card-actions { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
-    .btn-badge { background: #38003c; color: #fff; border: none; padding: 2px 5px; font-size: 0.65rem; border-radius: 3px; cursor: pointer; font-weight: bold; }
-    .btn-badge:hover { background: #00ff87; color: #38003c; }
+    /* Main Pitch Graphics */
+    .pitch-wrapper {
+      width: 100%;
+      max-width: 850px;
+      position: relative;
+    }
 
-    .controls-panel { margin-top: 20px; display: flex; gap: 10px; }
-    .action-btn { background: #00ff87; color: #38003c; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .action-btn:hover { background: #00cc6a; }
+    .pitch-field {
+      width: 100%;
+      min-height: 620px;
+      background: repeating-linear-gradient(
+        0deg,
+        #117a3f,
+        #117a3f 50px,
+        #0d6834 50px,
+        #0d6834 100px
+      );
+      border-radius: 12px;
+      border: 4px solid #2ed573;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 30px 15px;
+      overflow: hidden;
+    }
+
+    /* Tactical Line Markings */
+    .pitch-line-center {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-50%);
+    }
+
+    .pitch-circle-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .pitch-box-top {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 220px;
+      height: 90px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-top: none;
+      transform: translateX(-50%);
+    }
+
+    .pitch-box-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 220px;
+      height: 90px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-bottom: none;
+      transform: translateX(-50%);
+    }
+
+    /* Pitch Rows (Position Lines) */
+    .pitch-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+      min-height: 110px;
+    }
+
+    /* Bench Section */
+    .bench-wrapper {
+      width: 100%;
+      max-width: 850px;
+      background: #1e1e2a;
+      border-radius: 12px;
+      border: 1px solid #333348;
+      padding: 16px;
+      margin-top: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .bench-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #9a9ab0;
+      text-align: center;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .bench-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Card Slots Graphics */
+    .slot {
+      width: 100px;
+      height: 110px;
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .slot-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Top Bar -->
   <div class="header">
-    <h1>Ethio Premier Fantasy</h1>
-    <div id="formation-badge" class="formation-badge">Formation: 4-4-2</div>
+    <div class="brand-title">Ethio Premier Fantasy</div>
+    <div id="formation-badge" class="formation-badge">Formation: --</div>
   </div>
 
-  <div id="status-msg" class="status-msg"></div>
+  <!-- Message Banner -->
+  <div id="status-banner" class="status-banner"></div>
 
-  <div class="pitch-container">
-    <div id="pitch-gkp" class="pitch-line"></div>
-    <div id="pitch-def" class="pitch-line"></div>
-    <div id="pitch-mid" class="pitch-line"></div>
-    <div id="pitch-fwd" class="pitch-line"></div>
+  <!-- Main Pitch Field Graphic -->
+  <div class="pitch-wrapper">
+    <div class="pitch-field">
+      <!-- Pitch Markings -->
+      <div class="pitch-box-top"></div>
+      <div class="pitch-circle-center"></div>
+      <div class="pitch-line-center"></div>
+      <div class="pitch-box-bottom"></div>
+
+      <!-- Player Lines -->
+      <div id="pitch-gkp" class="pitch-row">
+        <div class="slot"><span class="slot-title">GKP</span></div>
+      </div>
+      <div id="pitch-def" class="pitch-row">
+        <div class="slot"><span class="slot-title">DEF</span></div>
+        <div class="slot"><span class="slot-title">DEF</span></div>
+        <div class="slot"><span class="slot-title">DEF</span></div>
+        <div class="slot"><span class="slot-title">DEF</span></div>
+      </div>
+      <div id="pitch-mid" class="pitch-row">
+        <div class="slot"><span class="slot-title">MID</span></div>
+        <div class="slot"><span class="slot-title">MID</span></div>
+        <div class="slot"><span class="slot-title">MID</span></div>
+        <div class="slot"><span class="slot-title">MID</span></div>
+      </div>
+      <div id="pitch-fwd" class="pitch-row">
+        <div class="slot"><span class="slot-title">FWD</span></div>
+        <div class="slot"><span class="slot-title">FWD</span></div>
+      </div>
+    </div>
   </div>
 
-  <div class="bench-container">
-    <div class="bench-title">Bench (Order: GKP | Bench 1 | Bench 2 | Bench 3)</div>
-    <div id="bench-line" class="bench-line"></div>
+  <!-- Bench Graphics -->
+  <div class="bench-wrapper">
+    <div class="bench-label">Substitutes</div>
+    <div id="bench-row" class="bench-row">
+      <div class="slot"><span class="slot-title">GKP (Sub)</span></div>
+      <div class="slot"><span class="slot-title">Sub 1</span></div>
+      <div class="slot"><span class="slot-title">Sub 2</span></div>
+      <div class="slot"><span class="slot-title">Sub 3</span></div>
+    </div>
   </div>
 
-  <div class="controls-panel">
-    <button id="btn-auto-sub" class="action-btn">Simulate Gameweek Auto-Subs</button>
-  </div>
-
-  <script src="app.js"></script>
 </body>
 </html>
