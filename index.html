@@ -1,1 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ethio Premier Fantasy</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <!-- FPL TOP BANNER -->
+    <header class="fpl-header">
+        <div class="brand-bar">
+            <h1>ETHIO PREMIER FANTASY</h1>
+            <span id="manager-display" class="manager-badge">Manager: Nate</span>
+        </div>
+        
+        <!-- SQUAD STATUS BAR -->
+        <div class="status-bar">
+            <div class="stat-item">
+                <span class="label">Players</span>
+                <strong id="count-val" class="val">0 / 15</strong>
+            </div>
+            <div class="stat-item highlight">
+                <span class="label">In the Bank</span>
+                <strong id="bank-val" class="val">£100.0m</strong>
+            </div>
+            <div class="stat-item">
+                <span class="label">Gameweek</span>
+                <strong class="val">GW 1</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- ACTION CONTROLS BAR -->
+    <div class="action-bar">
+        <button id="autopick-btn" class="action-btn secondary">Auto Pick</button>
+        <button id="reset-btn" class="action-btn danger">Reset</button>
+        <button id="enter-btn" class="action-btn primary" disabled>Enter Squad</button>
+    </div>
+
+    <!-- MAIN PITCH AREA (11 STARTERS) -->
+    <main class="pitch-viewport">
+        <div class="fpl-pitch">
+            
+            <!-- GOALKEEPER ROW (1 Slot) -->
+            <div class="pitch-row">
+                <div class="slot-wrapper" data-slot-id="1" data-pos="GKP">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">GKP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEFENDERS ROW (4 Slots) -->
+            <div class="pitch-row">
+                <div class="slot-wrapper" data-slot-id="2" data-pos="DEF">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">DEF</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="3" data-pos="DEF">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">DEF</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="4" data-pos="DEF">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">DEF</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="5" data-pos="DEF">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">DEF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIDFIELDERS ROW (4 Slots) -->
+            <div class="pitch-row">
+                <div class="slot-wrapper" data-slot-id="6" data-pos="MID">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">MID</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="7" data-pos="MID">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">MID</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="8" data-pos="MID">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">MID</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="9" data-pos="MID">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">MID</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORWARDS ROW (2 Slots) -->
+            <div class="pitch-row">
+                <div class="slot-wrapper" data-slot-id="10" data-pos="FWD">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">FWD</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="11" data-pos="FWD">
+                    <div class="player-slot empty">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">FWD</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BENCH PANEL (4 SUBS: 1 GKP, 1 DEF, 1 MID, 1 FWD) -->
+        <div class="bench-panel">
+            <div class="bench-header">
+                <span>SUBSTITUTES</span>
+            </div>
+            <div class="bench-row">
+                <div class="slot-wrapper" data-slot-id="12" data-pos="GKP">
+                    <div class="player-slot empty bench-slot">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">GKP</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="13" data-pos="DEF">
+                    <div class="player-slot empty bench-slot">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">DEF</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="14" data-pos="MID">
+                    <div class="player-slot empty bench-slot">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">MID</span>
+                    </div>
+                </div>
+                <div class="slot-wrapper" data-slot-id="15" data-pos="FWD">
+                    <div class="player-slot empty bench-slot">
+                        <div class="plus-btn">+</div>
+                        <span class="pos-tag">FWD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- TRANSFER MARKET MODAL / SLIDE-UP PANEL -->
+    <div id="market-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Select Player</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div id="market-list" class="market-list"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
