@@ -1,12 +1,12 @@
 /**
  * Fantasy Premier League Squad Manager - Phase 1 Complete Integration
- * Features: Dynamic Formations, Starter/Bench Swaps, Captain/Vice-Captain Rules,
- *           Auto-Substitutions Engine, and Pitch Layout Grouping.
  */
-
 class FantasySquadManager {
   constructor(initialSquad = { starters: [], bench: [] }) {
-    this.squad = initialSquad;
+    this.squad = {
+      starters: initialSquad.starters || [],
+      bench: initialSquad.bench || []
+    };
     this.FORMATION_RULES = {
       GKP: { min: 1, max: 1 },
       DEF: { min: 3, max: 5 },
@@ -18,11 +18,16 @@ class FantasySquadManager {
   }
 
   /**
-   * Validates if an array of starting players satisfies official FPL formation constraints.
-   * @param {Array} starters Array of starting player objects ({ id, name, position, ... })
-   * @returns {Object} { valid: boolean, reason?: string, formation?: string, counts?: Object }
+   * Helper to safely match player IDs regardless of string or number types
    */
-  isValidFormation(starters) {
+  _findPlayerIndex(playerList, targetId) {
+    return playerList.findIndex(p => p && String(p.id) === String(targetId));
+  }
+
+  /**
+   * Validates whether starting 11 meets legal FPL formation rules.
+   */
+  isValidFormation(starters = this.squad.starters) {
     if (!Array.isArray(starters) || starters.length !== this.FORMATION_RULES.TOTAL_STARTERS) {
       return { 
         valid: false, 
@@ -32,7 +37,8 @@ class FantasySquadManager {
 
     const counts = starters.reduce((acc, player) => {
       if (player && player.position) {
-        acc[player.position] = (acc[player.position] || 0) + 1;
+        const pos = String(player.position).toUpperCase();
+        acc[pos] = (acc[pos] || 0) + 1;
       }
       return acc;
     }, { GKP: 0, DEF: 0, MID: 0, FWD: 0 });
@@ -50,35 +56,33 @@ class FantasySquadManager {
       return { valid: false, reason: `Lineup must have between ${this.FORMATION_RULES.FWD.min} and ${this.FORMATION_RULES.FWD.max} Forwards.` };
     }
 
-    const formation = `${counts.DEF}-${counts.MID}-${counts.FWD}`;
-
-    return { valid: true, formation, counts };
+    return { 
+      valid: true, 
+      formation: `${counts.DEF}-${counts.MID}-${counts.FWD}`, 
+      counts 
+    };
   }
 
   /**
-   * Swaps a starting player with a bench player if the swap produces a legal formation.
-   * @param {string|number} starterId 
-   * @param {string|number} benchId 
-   * @returns {Object} { success: boolean, message?: string, squad?: Object, formation?: string }
+   * Swaps a starting player with a bench player.
    */
   swapStarterWithBench(starterId, benchId) {
     const starters = [...this.squad.starters];
     const bench = [...this.squad.bench];
 
-    const starterIdx = starters.findIndex(p => p.id === starterId);
-    const benchIdx = bench.findIndex(p => p.id === benchId);
+    const starterIdx = this._findPlayerIndex(starters, starterId);
+    const benchIdx = this._findPlayerIndex(bench, benchId);
 
     if (starterIdx === -1) {
-      return { success: false, message: "Selected starter player not found in lineup." };
+      return { success: false, message: `Starter with ID "${starterId}" not found in lineup.` };
     }
     if (benchIdx === -1) {
-      return { success: false, message: "Selected bench player not found." };
+      return { success: false, message: `Bench player with ID "${benchId}" not found.` };
     }
 
     const candidateStarter = bench[benchIdx];
     const candidateBench = starters[starterIdx];
 
-    // Create tentative lineup to check formation rules
     const testStarters = [...starters];
     testStarters[starterIdx] = candidateStarter;
 
@@ -87,7 +91,6 @@ class FantasySquadManager {
       return { success: false, message: validation.reason };
     }
 
-    // Apply swap upon successful validation
     starters[starterIdx] = candidateStarter;
     bench[benchIdx] = candidateBench;
 
@@ -101,47 +104,41 @@ class FantasySquadManager {
   }
 
   /**
-   * Assigns Captain and Vice-Captain roles to starting players.
-   * @param {string|number} captainId 
-   * @param {string|number} viceCaptainId 
-   * @returns {Object} { success: boolean, message?: string, squad?: Object }
+   * Assigns Captain and Vice-Captain roles.
    */
   setCaptainAndVice(captainId, viceCaptainId) {
-    if (captainId === viceCaptainId) {
+    if (String(captainId) === String(viceCaptainId)) {
       return { success: false, message: "Captain and Vice-Captain cannot be the same player." };
     }
 
-    const starterIds = new Set(this.squad.starters.map(p => p.id));
-    if (!starterIds.has(captainId)) {
+    const capIdx = this._findPlayerIndex(this.squad.starters, captainId);
+    const viceIdx = this._findPlayerIndex(this.squad.starters, viceCaptainId);
+
+    if (capIdx === -1) {
       return { success: false, message: "Selected Captain must be in the starting 11." };
     }
-    if (!starterIds.has(viceCaptainId)) {
+    if (viceIdx === -1) {
       return { success: false, message: "Selected Vice-Captain must be in the starting 11." };
     }
 
-    this.squad.starters = this.squad.starters.map(player => ({
+    this.squad.starters = this.squad.starters.map((player) => ({
       ...player,
-      isCaptain: player.id === captainId,
-      isViceCaptain: player.id === viceCaptainId
+      isCaptain: String(player.id) === String(captainId),
+      isViceCaptain: String(player.id) === String(viceCaptainId)
     }));
 
-    return {
-      success: true,
-      squad: this.squad
-    };
+    return { success: true, squad: this.squad };
   }
 
   /**
-   * Executes automatic substitutions after gameweek matches finish.
-   * @param {Object} matchStats Dictionary of player IDs to stats e.g. { player_12: { minutes: 90 } }
-   * @returns {Object} { squad: Object, subsPerformed: Array }
+   * Executes automatic substitutions.
    */
   processAutoSubstitutions(matchStats = {}) {
     let starters = this.squad.starters.map(p => ({ ...p }));
     let bench = this.squad.bench.map(p => ({ ...p }));
     const subsPerformed = [];
 
-    // 1. Goalkeeper substitution
+    // Goalkeeper substitution
     const startingGkpIdx = starters.findIndex(p => p.position === 'GKP');
     const benchGkpIdx = bench.findIndex(p => p.position === 'GKP');
 
@@ -149,8 +146,8 @@ class FantasySquadManager {
       const startingGkp = starters[startingGkpIdx];
       const benchGkp = bench[benchGkpIdx];
 
-      const gkpMins = matchStats[startingGkp.id]?.minutes || 0;
-      const benchGkpMins = matchStats[benchGkp.id]?.minutes || 0;
+      const gkpMins = matchStats[startingGkp.id]?.minutes ?? matchStats[String(startingGkp.id)]?.minutes ?? 0;
+      const benchGkpMins = matchStats[benchGkp.id]?.minutes ?? matchStats[String(benchGkp.id)]?.minutes ?? 0;
 
       if (gkpMins === 0 && benchGkpMins > 0) {
         starters[startingGkpIdx] = benchGkp;
@@ -158,39 +155,36 @@ class FantasySquadManager {
         subsPerformed.push({
           type: "GKP_SUB",
           out: startingGkp,
-          in: benchGkp,
-          reason: "Starting goalkeeper played 0 minutes"
+          in: benchGkp
         });
       }
     }
 
-    // 2. Outfield substitutions (evaluated in strict bench order: Bench 1 -> Bench 2 -> Bench 3)
-    const benchUsedFlags = new Array(bench.length).fill(false);
+    // Outfield substitutions
+    const benchUsed = new Array(bench.length).fill(false);
 
     for (let i = 0; i < starters.length; i++) {
       const starter = starters[i];
       if (starter.position === 'GKP') continue;
 
-      const starterMins = matchStats[starter.id]?.minutes || 0;
+      const starterMins = matchStats[starter.id]?.minutes ?? matchStats[String(starter.id)]?.minutes ?? 0;
       if (starterMins === 0) {
         for (let j = 0; j < bench.length; j++) {
           const benchPlayer = bench[j];
-          if (benchPlayer.position === 'GKP' || benchUsedFlags[j]) continue;
+          if (benchPlayer.position === 'GKP' || benchUsed[j]) continue;
 
-          const benchMins = matchStats[benchPlayer.id]?.minutes || 0;
+          const benchMins = matchStats[benchPlayer.id]?.minutes ?? matchStats[String(benchPlayer.id)]?.minutes ?? 0;
           if (benchMins === 0) continue;
 
-          // Test formation validity before committing sub
           const testStarters = [...starters];
           testStarters[i] = benchPlayer;
 
           if (this.isValidFormation(testStarters).valid) {
-            benchUsedFlags[j] = true;
+            benchUsed[j] = true;
             subsPerformed.push({
               type: "OUTFIELD_SUB",
               out: starter,
-              in: benchPlayer,
-              reason: "Starting player played 0 minutes"
+              in: benchPlayer
             });
             starters[i] = benchPlayer;
             bench[j] = starter;
@@ -200,26 +194,25 @@ class FantasySquadManager {
       }
     }
 
-    // 3. Captain fallback to Vice-Captain
-    const captainIdx = starters.findIndex(p => p.isCaptain);
-    if (captainIdx !== -1) {
-      const captain = starters[captainIdx];
-      const capMins = matchStats[captain.id]?.minutes || 0;
+    // Captain fallback
+    const capIdx = starters.findIndex(p => p.isCaptain);
+    if (capIdx !== -1) {
+      const captain = starters[capIdx];
+      const capMins = matchStats[captain.id]?.minutes ?? matchStats[String(captain.id)]?.minutes ?? 0;
 
       if (capMins === 0) {
         const viceIdx = starters.findIndex(p => p.isViceCaptain);
         if (viceIdx !== -1) {
           const vice = starters[viceIdx];
-          const viceMins = matchStats[vice.id]?.minutes || 0;
+          const viceMins = matchStats[vice.id]?.minutes ?? matchStats[String(vice.id)]?.minutes ?? 0;
 
           if (viceMins > 0) {
-            starters[captainIdx].isCaptain = false;
+            starters[capIdx].isCaptain = false;
             starters[viceIdx].isCaptain = true;
             subsPerformed.push({
               type: "CAPTAIN_FALLBACK",
               from: captain,
-              to: vice,
-              reason: "Captain played 0 minutes; armband transferred to Vice-Captain"
+              to: vice
             });
           }
         }
@@ -227,21 +220,18 @@ class FantasySquadManager {
     }
 
     this.squad = { starters, bench };
-    return {
-      squad: this.squad,
-      subsPerformed
-    };
+    return { squad: this.squad, subsPerformed };
   }
 
   /**
-   * Groups starting players by line for UI pitch rendering.
-   * @returns {Object} { GKP: [], DEF: [], MID: [], FWD: [], formation: string }
+   * Groups starters by position for rendering.
    */
   getPitchLayout() {
     const layout = { GKP: [], DEF: [], MID: [], FWD: [] };
     this.squad.starters.forEach(player => {
-      if (layout[player.position]) {
-        layout[player.position].push(player);
+      const pos = String(player.position).toUpperCase();
+      if (layout[pos]) {
+        layout[pos].push(player);
       }
     });
 
@@ -250,9 +240,39 @@ class FantasySquadManager {
   }
 }
 
-// Export for module systems or attach to global window context
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = FantasySquadManager;
-} else {
+// -------------------------------------------------------------
+// DEMO INITIALIZATION & VERIFICATION
+// -------------------------------------------------------------
+const sampleSquad = {
+  starters: [
+    { id: 1, name: "Raya", position: "GKP", isCaptain: false, isViceCaptain: false },
+    { id: 2, name: "Gabriel", position: "DEF", isCaptain: false, isViceCaptain: false },
+    { id: 3, name: "Saliba", position: "DEF", isCaptain: false, isViceCaptain: false },
+    { id: 4, name: "Alexander-Arnold", position: "DEF", isCaptain: false, isViceCaptain: false },
+    { id: 5, name: "Gvardiol", position: "DEF", isCaptain: false, isViceCaptain: false },
+    { id: 6, name: "Saka", position: "MID", isCaptain: true, isViceCaptain: false },
+    { id: 7, name: "Palmer", position: "MID", isCaptain: false, isViceCaptain: true },
+    { id: 8, name: "Salah", position: "MID", isCaptain: false, isViceCaptain: false },
+    { id: 9, name: "Gordon", position: "MID", isCaptain: false, isViceCaptain: false },
+    { id: 10, name: "Haaland", position: "FWD", isCaptain: false, isViceCaptain: false },
+    { id: 11, name: "Watkins", position: "FWD", isCaptain: false, isViceCaptain: false }
+  ],
+  bench: [
+    { id: 12, name: "Neto", position: "GKP", isCaptain: false, isViceCaptain: false },
+    { id: 13, name: "Rogers", position: "MID", isCaptain: false, isViceCaptain: false },
+    { id: 14, name: "Konsa", position: "DEF", isCaptain: false, isViceCaptain: false },
+    { id: 15, name: "Joao Pedro", position: "FWD", isCaptain: false, isViceCaptain: false }
+  ]
+};
+
+// Initialize manager instance on window for browser access
+if (typeof window !== 'undefined') {
   window.FantasySquadManager = FantasySquadManager;
+  window.fantasyManager = new FantasySquadManager(sampleSquad);
+  console.log("FantasySquadManager initialized. Formation:", window.fantasyManager.getPitchLayout().formation);
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { FantasySquadManager, sampleSquad };
+}
+
