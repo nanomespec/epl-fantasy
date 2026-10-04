@@ -348,3 +348,64 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
+/* CAPTAIN & VICE-CAPTAIN BADGES */
+.captain-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: #000000;
+    color: var(--fpl-green);
+    border: 1px solid var(--fpl-green);
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 900;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.vc-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 900;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* PLAYER ACTION MENU MODAL */
+.player-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.action-option-btn {
+    padding: 12px;
+    background: #18181c;
+    border: 1px solid var(--border-color);
+    color: var(--text-white);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.action-option-btn.remove {
+    color: var(--fpl-pink);
+    border-color: rgba(233, 0, 82, 0.3);
+}
