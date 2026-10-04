@@ -1,4 +1,3 @@
-// Initialize Telegram WebApp SDK
 const tg = window.Telegram?.WebApp;
 if (tg) {
     tg.ready();
@@ -31,12 +30,19 @@ const MARKET_PLAYERS = [
     { id: 16, name: "Chernet Gugsa", club: "Bahir Dar City", pos: "FWD", price: 8.0 }
 ];
 
-// App State (15 empty slots initially)
-let userSquad = {}; // Map slotId -> player Object
-let remainingBudget = 100.0;
+// Load saved squad or start fresh
+let userSquad = JSON.parse(localStorage.getItem("fpl_user_squad") || "{}");
+let captainId = localStorage.getItem("fpl_captain") ? Number(localStorage.getItem("fpl_captain")) : null;
+let viceCaptainId = localStorage.getItem("fpl_vc") ? Number(localStorage.getItem("fpl_vc")) : null;
 let activeSlotId = null;
 
-// DOM Elements
+// Recalculate remaining budget
+function calculateBudget() {
+    let spent = 0;
+    Object.values(userSquad).forEach(p => spent += p.price);
+    return 100.0 - spent;
+}
+
 const bankVal = document.getElementById("bank-val");
 const countVal = document.getElementById("count-val");
 const enterBtn = document.getElementById("enter-btn");
@@ -45,26 +51,66 @@ const marketList = document.getElementById("market-list");
 const modalTitle = document.getElementById("modal-title");
 const closeModalBtn = document.getElementById("close-modal");
 
-// Attach click listeners to all 15 pitch & bench slots
+// Slot click handlers
 document.querySelectorAll(".slot-wrapper").forEach(slotEl => {
     slotEl.addEventListener("click", () => {
         const slotId = slotEl.dataset.slotId;
         const requiredPos = slotEl.dataset.pos;
 
         if (userSquad[slotId]) {
-            // Remove player if slot is filled
-            removePlayerFromSlot(slotId);
+            openPlayerActionMenu(slotId);
         } else {
-            // Open market for this position
             openMarketForSlot(slotId, requiredPos);
         }
     });
 });
 
-// Open Market Modal
+// Open Action Menu for filled slot (Set C, VC, or Remove)
+function openPlayerActionMenu(slotId) {
+    const player = userSquad[slotId];
+    activeSlotId = slotId;
+    modalTitle.textContent = `${player.name} (${player.pos})`;
+
+    const isC = captainId === player.id;
+    const isVC = viceCaptainId === player.id;
+
+    marketList.innerHTML = `
+        <div class="player-actions">
+            <button class="action-option-btn" onclick="setCaptain(${player.id})">
+                ${isC ? "✓ Current Captain" : "Make Captain (C)"}
+            </button>
+            <button class="action-option-btn" onclick="setViceCaptain(${player.id})">
+                ${isVC ? "✓ Current Vice-Captain" : "Make Vice-Captain (V)"}
+            </button>
+            <button class="action-option-btn remove" onclick="removePlayerFromSlot('${slotId}')">
+                Remove Player
+            </button>
+        </div>
+    `;
+    marketModal.classList.add("active");
+}
+
+function setCaptain(playerId) {
+    if (viceCaptainId === playerId) viceCaptainId = null;
+    captainId = playerId;
+    saveState();
+    closeMarketModal();
+    updateUI();
+}
+
+function setViceCaptain(playerId) {
+    if (captainId === playerId) captainId = null;
+    viceCaptainId = playerId;
+    saveState();
+    closeMarketModal();
+    updateUI();
+}
+
+// Open Transfer Market
 function openMarketForSlot(slotId, pos) {
     activeSlotId = slotId;
-    modalTitle.textContent = `Select ${pos} (Budget: £${remainingBudget.toFixed(1)}m)`;
+    const budget = calculateBudget();
+    modalTitle.textContent = `Select ${pos} (Budget: £${budget.toFixed(1)}m)`;
     marketList.innerHTML = "";
 
     const availablePlayers = MARKET_PLAYERS.filter(p => {
@@ -73,10 +119,10 @@ function openMarketForSlot(slotId, pos) {
     });
 
     if (availablePlayers.length === 0) {
-        marketList.innerHTML = `<p style="color:#aaa; text-align:center;">No available players for this position.</p>`;
+        marketList.innerHTML = `<p style="color:#aaa; text-align:center;">No available players.</p>`;
     } else {
         availablePlayers.forEach(p => {
-            const canAfford = remainingBudget >= p.price;
+            const canAfford = budget >= p.price;
             marketList.innerHTML += `
                 <div class="market-item">
                     <div class="p-info">
@@ -94,53 +140,66 @@ function openMarketForSlot(slotId, pos) {
     marketModal.classList.add("active");
 }
 
-// Select player from market
 function selectPlayer(playerId) {
     const player = MARKET_PLAYERS.find(p => p.id === playerId);
-    if (!player || remainingBudget < player.price) return;
+    if (!player || calculateBudget() < player.price) return;
 
     userSquad[activeSlotId] = player;
-    remainingBudget -= player.price;
+    
+    // Auto-assign captain/vc if squad is filling up
+    if (!captainId) captainId = player.id;
+    else if (!viceCaptainId && captainId !== player.id) viceCaptainId = player.id;
 
+    saveState();
     closeMarketModal();
     updateUI();
 }
 
-// Remove player from slot
 function removePlayerFromSlot(slotId) {
     const player = userSquad[slotId];
     if (player) {
-        remainingBudget += player.price;
+        if (captainId === player.id) captainId = null;
+        if (viceCaptainId === player.id) viceCaptainId = null;
         delete userSquad[slotId];
+        saveState();
+        closeMarketModal();
         updateUI();
     }
 }
 
-// Close Modal
 closeModalBtn.addEventListener("click", closeMarketModal);
 function closeMarketModal() {
     marketModal.classList.remove("active");
     activeSlotId = null;
 }
 
-// Render UI & Stats
+function saveState() {
+    localStorage.setItem("fpl_user_squad", JSON.stringify(userSquad));
+    if (captainId) localStorage.setItem("fpl_captain", captainId);
+    if (viceCaptainId) localStorage.setItem("fpl_vc", viceCaptainId);
+}
+
 function updateUI() {
     const count = Object.keys(userSquad).length;
-    
-    // Update Header
+    const remainingBudget = calculateBudget();
+
     bankVal.textContent = `£${remainingBudget.toFixed(1)}m`;
     countVal.textContent = `${count} / 15`;
     enterBtn.disabled = count !== 15;
 
-    // Update Pitch Slots
     document.querySelectorAll(".slot-wrapper").forEach(slotEl => {
         const slotId = slotEl.dataset.slotId;
         const pos = slotEl.dataset.pos;
         const player = userSquad[slotId];
 
         if (player) {
+            const isC = captainId === player.id;
+            const isVC = viceCaptainId === player.id;
+            const badgeHTML = isC ? `<div class="captain-badge">C</div>` : isVC ? `<div class="vc-badge">V</div>` : "";
+
             slotEl.innerHTML = `
                 <div class="player-slot filled">
+                    ${badgeHTML}
                     <span class="p-shirt">👕</span>
                     <span class="p-name">${player.name.split(" ")[0]}</span>
                     <span class="p-price">£${player.price.toFixed(1)}m</span>
@@ -158,10 +217,11 @@ function updateUI() {
     });
 }
 
-// Auto Pick Button
+// Auto Pick
 document.getElementById("autopick-btn").addEventListener("click", () => {
     userSquad = {};
-    remainingBudget = 100.0;
+    captainId = null;
+    viceCaptainId = null;
 
     document.querySelectorAll(".slot-wrapper").forEach(slotEl => {
         const slotId = slotEl.dataset.slotId;
@@ -169,36 +229,41 @@ document.getElementById("autopick-btn").addEventListener("click", () => {
 
         const available = MARKET_PLAYERS.filter(p => {
             const chosen = Object.values(userSquad).some(s => s.id === p.id);
-            return p.pos === pos && !chosen && remainingBudget >= p.price;
+            return p.pos === pos && !chosen && calculateBudget() >= p.price;
         });
 
         if (available.length > 0) {
             const pick = available[Math.floor(Math.random() * available.length)];
             userSquad[slotId] = pick;
-            remainingBudget -= pick.price;
         }
     });
 
+    const squadList = Object.values(userSquad);
+    if (squadList.length > 0) captainId = squadList[0].id;
+    if (squadList.length > 1) viceCaptainId = squadList[1].id;
+
+    saveState();
     updateUI();
 });
 
-// Reset Button
+// Reset
 document.getElementById("reset-btn").addEventListener("click", () => {
     userSquad = {};
-    remainingBudget = 100.0;
+    captainId = null;
+    viceCaptainId = null;
+    localStorage.clear();
     updateUI();
 });
 
-// Enter Squad Button
+// Enter Squad
 enterBtn.addEventListener("click", () => {
     if (Object.keys(userSquad).length === 15) {
         if (tg?.showAlert) {
-            tg.showAlert("Squad entered successfully! You're ready for GW 1.");
+            tg.showAlert("Squad & Captains saved successfully for Gameweek 1!");
         } else {
-            alert("Squad entered successfully! You're ready for GW 1.");
+            alert("Squad & Captains saved successfully for Gameweek 1!");
         }
     }
 });
 
-// Initial boot
 updateUI();
