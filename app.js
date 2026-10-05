@@ -2,965 +2,674 @@
    ETHIOPIAN PREMIER LEAGUE FANTASY - COMPLETE & UNIFIED APP LOGIC
    ========================================================================== */
 
-// --- 1. DATA CONSTANTS & REGISTERED PLAYERS (20 PLAYERS DATASET) ---
+// --- 1. DATA CONSTANTS & INITIAL REGISTERED PLAYERS (16 PLAYERS) ---
 const INITIAL_PLAYERS = [
-  {
-    id: 1,
-    name: "Abebe Tilahun",
-    pos: "GK",
-    club: "St. George",
-    price: 5.0,
-    points: 42,
-    form: 4.5,
-    goals: 0,
-    assists: 0,
-    cleanSheets: 5,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "35.2%",
-    nextFixture: "vs Bahir Dar (H)"
-  },
-  {
-    id: 2,
-    name: "Bahiru Negash",
-    pos: "GK",
-    club: "Ethiopia Bunna",
-    price: 4.5,
-    points: 38,
-    form: 3.8,
-    goals: 0,
-    assists: 0,
-    cleanSheets: 4,
-    yellowCards: 0,
-    redCards: 0,
-    selectedBy: "22.1%",
-    nextFixture: "vs Fasil Kenema (A)"
-  },
-  {
-    id: 3,
-    name: "Aschalew Tamene",
-    pos: "DEF",
-    club: "Fasil Kenema",
-    price: 5.5,
-    points: 58,
-    form: 5.2,
-    goals: 2,
-    assists: 1,
-    cleanSheets: 6,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "48.5%",
-    nextFixture: "vs Ethiopia Bunna (H)"
-  },
-  {
-    id: 4,
-    name: "Yared Bayeh",
-    pos: "DEF",
-    club: "Bahir Dar",
-    price: 5.0,
-    points: 45,
-    form: 4.0,
-    goals: 1,
-    assists: 2,
-    cleanSheets: 5,
-    yellowCards: 3,
-    redCards: 0,
-    selectedBy: "18.9%",
-    nextFixture: "vs St. George (A)"
-  },
-  {
-    id: 5,
-    name: "Suleman Hamid",
-    pos: "DEF",
-    club: "St. George",
-    price: 5.0,
-    points: 51,
-    form: 4.8,
-    goals: 1,
-    assists: 4,
-    cleanSheets: 5,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "29.4%",
-    nextFixture: "vs Bahir Dar (H)"
-  },
-  {
-    id: 6,
-    name: "Henok Gebre",
-    pos: "DEF",
-    club: "Ethiopia Bunna",
-    price: 4.5,
-    points: 36,
-    form: 3.5,
-    goals: 0,
-    assists: 2,
-    cleanSheets: 4,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "12.0%",
-    nextFixture: "vs Fasil Kenema (A)"
-  },
-  {
-    id: 7,
-    name: "Ramkel Lok",
-    pos: "DEF",
-    club: "EEPCO",
-    price: 4.0,
-    points: 28,
-    form: 2.8,
-    goals: 0,
-    assists: 1,
-    cleanSheets: 3,
-    yellowCards: 4,
-    redCards: 0,
-    selectedBy: "8.3%",
-    nextFixture: "vs Defense Force (H)"
-  },
-  {
-    id: 8,
-    name: "Gatoch Panom",
-    pos: "MID",
-    club: "St. George",
-    price: 7.0,
-    points: 68,
-    form: 6.1,
-    goals: 4,
-    assists: 5,
-    cleanSheets: 5,
-    yellowCards: 3,
-    redCards: 0,
-    selectedBy: "52.1%",
-    nextFixture: "vs Bahir Dar (H)"
-  },
-  {
-    id: 9,
-    name: "Surafel Dagnachew",
-    pos: "MID",
-    club: "Fasil Kenema",
-    price: 7.5,
-    points: 74,
-    form: 6.8,
-    goals: 6,
-    assists: 6,
-    cleanSheets: 6,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "61.3%",
-    nextFixture: "vs Ethiopia Bunna (H)"
-  },
-  {
-    id: 10,
-    name: "Amanuel Yohannes",
-    pos: "MID",
-    club: "Ethiopia Bunna",
-    price: 6.5,
-    points: 55,
-    form: 5.0,
-    goals: 3,
-    assists: 4,
-    cleanSheets: 4,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "27.8%",
-    nextFixture: "vs Fasil Kenema (A)"
-  },
-  {
-    id: 11,
-    name: "Canaan Markneh",
-    pos: "MID",
-    club: "Defense Force",
-    price: 6.0,
-    points: 49,
-    form: 4.2,
-    goals: 3,
-    assists: 3,
-    cleanSheets: 3,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "15.4%",
-    nextFixture: "vs EEPCO (A)"
-  },
-  {
-    id: 12,
-    name: "Biniyam Fikre",
-    pos: "MID",
-    club: "Sidama Bunna",
-    price: 5.5,
-    points: 41,
-    form: 3.9,
-    goals: 2,
-    assists: 3,
-    cleanSheets: 2,
-    yellowCards: 0,
-    redCards: 0,
-    selectedBy: "9.1%",
-    nextFixture: "vs Adama City (H)"
-  },
-  {
-    id: 13,
-    name: "Dawa Hotessa",
-    pos: "MID",
-    club: "Adama City",
-    price: 6.0,
-    points: 47,
-    form: 4.4,
-    goals: 4,
-    assists: 2,
-    cleanSheets: 2,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "14.2%",
-    nextFixture: "vs Sidama Bunna (A)"
-  },
-  {
-    id: 14,
-    name: "Getaneh Kebede",
-    pos: "FWD",
-    club: "Fasil Kenema",
-    price: 8.5,
-    points: 82,
-    form: 7.2,
-    goals: 10,
-    assists: 3,
-    cleanSheets: 6,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "68.9%",
-    nextFixture: "vs Ethiopia Bunna (H)"
-  },
-  {
-    id: 15,
-    name: "Abubeker Nassir",
-    pos: "FWD",
-    club: "Ethiopia Bunna",
-    price: 9.0,
-    points: 91,
-    form: 8.1,
-    goals: 12,
-    assists: 4,
-    cleanSheets: 4,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "75.4%",
-    nextFixture: "vs Fasil Kenema (A)"
-  },
-  {
-    id: 16,
-    name: "Chernet Gugsa",
-    pos: "FWD",
-    club: "St. George",
-    price: 7.5,
-    points: 62,
-    form: 5.6,
-    goals: 7,
-    assists: 2,
-    cleanSheets: 5,
-    yellowCards: 0,
-    redCards: 0,
-    selectedBy: "31.0%",
-    nextFixture: "vs Bahir Dar (H)"
-  },
-  {
-    id: 17,
-    name: "Mujib Kassim",
-    pos: "FWD",
-    club: "Hawassa City",
-    price: 7.0,
-    points: 54,
-    form: 4.9,
-    goals: 6,
-    assists: 1,
-    cleanSheets: 2,
-    yellowCards: 3,
-    redCards: 0,
-    selectedBy: "19.5%",
-    nextFixture: "vs EEPCO (H)"
-  },
-  {
-    id: 18,
-    name: "Fikru Teferra",
-    pos: "FWD",
-    club: "Sidama Bunna",
-    price: 6.5,
-    points: 44,
-    form: 4.1,
-    goals: 5,
-    assists: 1,
-    cleanSheets: 2,
-    yellowCards: 2,
-    redCards: 0,
-    selectedBy: "11.3%",
-    nextFixture: "vs Adama City (H)"
-  },
-  {
-    id: 19,
-    name: "Mesud Mohammed",
-    pos: "MID",
-    club: "Jimma Aba Jifar",
-    price: 5.5,
-    points: 39,
-    form: 3.6,
-    goals: 2,
-    assists: 4,
-    cleanSheets: 1,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "6.7%",
-    nextFixture: "vs Hawassa City (A)"
-  },
-  {
-    id: 20,
-    name: "Amanueal Gebremichael",
-    pos: "FWD",
-    club: "St. George",
-    price: 8.0,
-    points: 69,
-    form: 5.8,
-    goals: 8,
-    assists: 3,
-    cleanSheets: 5,
-    yellowCards: 1,
-    redCards: 0,
-    selectedBy: "24.6%",
-    nextFixture: "vs Bahir Dar (H)"
-  }
+  { id: 1, name: "Abebe Tilahun", pos: "GK", club: "St. George", price: 4.5, points: 28, goals: 0, assists: 0, cleanSheets: 4 },
+  { id: 2, name: "Bahiru Negash", pos: "GK", club: "Ethiopia Bunna", price: 4.5, points: 24, goals: 0, assists: 0, cleanSheets: 3 },
+  { id: 3, name: "Aschalew Tamene", pos: "DEF", club: "Fasil Kenema", price: 5.0, points: 42, goals: 2, assists: 1, cleanSheets: 5 },
+  { id: 4, name: "Yared Bayeh", pos: "DEF", club: "Bahir Dar", price: 5.0, points: 38, goals: 1, assists: 2, cleanSheets: 4 },
+  { id: 5, name: "Suleman Hamid", pos: "DEF", club: "St. George", price: 4.5, points: 31, goals: 0, assists: 3, cleanSheets: 4 },
+  { id: 6, name: "Henok Gebre", pos: "DEF", club: "Ethiopia Bunna", price: 4.5, points: 29, goals: 1, assists: 1, cleanSheets: 3 },
+  { id: 7, name: "Ramkel Lok", pos: "DEF", club: "EEPCO", price: 4.0, points: 18, goals: 0, assists: 0, cleanSheets: 2 },
+  { id: 8, name: "Gatoch Panom", pos: "MID", club: "St. George", price: 6.0, points: 55, goals: 4, assists: 4, cleanSheets: 0 },
+  { id: 9, name: "Surafel Dagnachew", pos: "MID", club: "Fasil Kenema", price: 6.5, points: 61, goals: 6, assists: 5, cleanSheets: 0 },
+  { id: 10, name: "Amanuel Yohannes", pos: "MID", club: "Ethiopia Bunna", price: 6.0, points: 48, goals: 3, assists: 4, cleanSheets: 0 },
+  { id: 11, name: "Canaan Markneh", pos: "MID", club: "Defense Force", price: 5.5, points: 39, goals: 3, assists: 2, cleanSheets: 0 },
+  { id: 12, name: "Biniyam Fikre", pos: "MID", club: "Sidama Bunna", price: 5.0, points: 32, goals: 2, assists: 2, cleanSheets: 0 },
+  { id: 13, name: "Getaneh Kebede", pos: "FWD", club: "Wolkite", price: 7.0, points: 68, goals: 8, assists: 3, cleanSheets: 0 },
+  { id: 14, name: "Abel Yalew", pos: "FWD", club: "Mechal", price: 7.5, points: 74, goals: 9, assists: 4, cleanSheets: 0 },
+  { id: 15, name: "Dawa Hotessa", pos: "FWD", club: "Adama City", price: 6.5, points: 52, goals: 6, assists: 2, cleanSheets: 0 },
+  { id: 16, name: "Chernet Gugsa", pos: "FWD", club: "St. George", price: 6.0, points: 45, goals: 5, assists: 3, cleanSheets: 0 }
 ];
 
-// --- 2. GAME RULES & CONSTRAINTS ---
-const RULES = {
-  MAX_BUDGET: 100.0,
-  MAX_SQUAD_SIZE: 15,
-  MAX_PER_CLUB: 3,
-  POS_LIMITS: { GK: 2, DEF: 5, MID: 5, FWD: 3 },
-  FORMATION_RULES: {
-    MIN_DEF: 3,
-    MAX_DEF: 5,
-    MIN_MID: 2,
-    MAX_MID: 5,
-    MIN_FWD: 1,
-    MAX_FWD: 3
-  }
+const SQUAD_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
+const MAX_SQUAD_SIZE = 15;
+const INITIAL_BUDGET = 100.0;
+const MAX_PER_CLUB = 3;
+
+// --- 2. GLOBAL APP STATE ---
+let state = {
+  activeTab: 'pick-team', // 'pick-team' | 'transfers' | 'points' | 'rules'
+  squad: [],              // Array of selected player IDs (up to 15)
+  startingXI: [],         // Array of starting XI player IDs (up to 11)
+  bench: [],              // Array of bench player IDs (up to 4)
+  captainId: null,
+  viceCaptainId: null,
+  bank: INITIAL_BUDGET,
+  positionFilter: 'ALL',   // 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'
+  searchQuery: '',
+  hasSeenWelcome: false,
+  currentGameweek: 1,
+  selectedForSwap: null    // Tracks player ID selected for bench substitution
 };
 
-// --- 3. GLOBAL SQUAD STATE ---
-let squadState = {
-  squad: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16],
-  starters: [1, 3, 4, 5, 6, 8, 9, 10, 11, 14, 15], // 1 GK, 4 DEF, 4 MID, 2 FWD = 4-4-2
-  bench: [2, 7, 12, 16], // 1 GK, 1 DEF, 1 MID, 1 FWD
-  captainId: 15,
-  viceCaptainId: 14,
-  selectedPlayerId: null,
-  bank: 12.0,
-  formation: "4-4-2",
-  transfersFree: 1,
-  transfersCost: 0,
-  filterPos: "ALL",
-  searchQuery: "",
-  sortBy: "points"
-};
-
-// --- 4. LOCAL STORAGE PERSISTENCE & RECOVERY ---
-function saveState() {
-  try {
-    localStorage.setItem("epl_fantasy_squad_v2", JSON.stringify(squadState));
-  } catch (e) {
-    console.warn("Unable to save state to LocalStorage:", e);
-  }
-}
-
+// --- 3. STORAGE & STATE PERSISTENCE ---
 function loadState() {
-  try {
-    const saved = localStorage.getItem("epl_fantasy_squad_v2");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      squadState = { ...squadState, ...parsed };
+  const savedSquad = localStorage.getItem('epl_fantasy_squad');
+  const savedWelcome = localStorage.getItem('epl_fantasy_welcome');
+  const savedXI = localStorage.getItem('epl_fantasy_xi');
+  const savedRoles = localStorage.getItem('epl_fantasy_roles');
+
+  if (savedSquad) {
+    try {
+      state.squad = JSON.parse(savedSquad);
+      recalculateBank();
+    } catch (e) {
+      state.squad = [];
     }
-  } catch (e) {
-    console.warn("Unable to load state from LocalStorage:", e);
-  }
-}
-
-function resetSquadState() {
-  squadState.squad = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16];
-  squadState.starters = [1, 3, 4, 5, 6, 8, 9, 10, 11, 14, 15];
-  squadState.bench = [2, 7, 12, 16];
-  squadState.captainId = 15;
-  squadState.viceCaptainId = 14;
-  squadState.selectedPlayerId = null;
-  squadState.bank = 12.0;
-  squadState.formation = "4-4-2";
-  saveState();
-  renderApp();
-  showNotification("Squad state reset to default configuration.", "info");
-}
-
-// --- 5. DYNAMIC FORMATION CALCULATOR & VALIDATION ENGINE ---
-
-/**
- * Calculates formation string dynamically based on starters
- * @param {Array} startersList - Array of starter player objects
- * @returns {string} e.g. "4-4-2", "3-5-2", "4-3-3", "5-3-2", "4-5-1"
- */
-function calculateFormation(startersList) {
-  const defs = startersList.filter(p => p.pos === "DEF").length;
-  const mids = startersList.filter(p => p.pos === "MID").length;
-  const fwds = startersList.filter(p => p.pos === "FWD").length;
-  return `${defs}-${mids}-${fwds}`;
-}
-
-/**
- * Validates whether a given 11-player lineup conforms to FPL formation rules
- * @param {Array} startersList - Array of starter player objects
- * @returns {Object} { valid: boolean, reason: string }
- */
-function isValidFormation(startersList) {
-  if (startersList.length !== 11) {
-    return { valid: false, reason: "Lineup must contain exactly 11 starting players." };
   }
 
-  const gks = startersList.filter(p => p.pos === "GK").length;
-  const defs = startersList.filter(p => p.pos === "DEF").length;
-  const mids = startersList.filter(p => p.pos === "MID").length;
-  const fwds = startersList.filter(p => p.pos === "FWD").length;
-
-  if (gks !== 1) {
-    return { valid: false, reason: "You must have exactly 1 Goalkeeper on the pitch." };
-  }
-  if (defs < RULES.FORMATION_RULES.MIN_DEF || defs > RULES.FORMATION_RULES.MAX_DEF) {
-    return {
-      valid: false,
-      reason: `Invalid Defender count (${defs}). Teams require 3 to 5 Defenders.`
-    };
-  }
-  if (mids < RULES.FORMATION_RULES.MIN_MID || mids > RULES.FORMATION_RULES.MAX_MID) {
-    return {
-      valid: false,
-      reason: `Invalid Midfielder count (${mids}). Teams require 2 to 5 Midfielders.`
-    };
-  }
-  if (fwds < RULES.FORMATION_RULES.MIN_FWD || fwds > RULES.FORMATION_RULES.MAX_FWD) {
-    return {
-      valid: false,
-      reason: `Invalid Forward count (${fwds}). Teams require 1 to 3 Forwards.`
-    };
-  }
-
-  return { valid: true };
-}
-
-// --- 6. SUBSTITUTION & PLAYER SWAP SYSTEM ---
-
-/**
- * Handles clicks and substitutions between pitch and bench players
- */
-function handlePlayerSwap(player1Id, player2Id) {
-  // Deselect if clicking the same player twice
-  if (player1Id === player2Id) {
-    squadState.selectedPlayerId = null;
-    renderApp();
-    return;
-  }
-
-  const isP1Starter = squadState.starters.includes(player1Id);
-  const isP2Starter = squadState.starters.includes(player2Id);
-
-  // Case A: Starter to Starter click (Switch selection to new starter)
-  if (isP1Starter && isP2Starter) {
-    squadState.selectedPlayerId = player2Id;
-    renderApp();
-    return;
-  }
-
-  // Case B: Bench to Bench swap (Re-order bench preference)
-  if (!isP1Starter && !isP2Starter) {
-    const idx1 = squadState.bench.indexOf(player1Id);
-    const idx2 = squadState.bench.indexOf(player2Id);
-    if (idx1 !== -1 && idx2 !== -1) {
-      squadState.bench[idx1] = player2Id;
-      squadState.bench[idx2] = player1Id;
+  if (savedXI) {
+    try {
+      const parsed = JSON.parse(savedXI);
+      state.startingXI = parsed.startingXI || [];
+      state.bench = parsed.bench || [];
+    } catch (e) {
+      autoAssignXIAndBench();
     }
-    squadState.selectedPlayerId = null;
-    saveState();
-    renderApp();
-    showNotification("Bench order re-arranged.", "info");
-    return;
-  }
-
-  // Case C: Substitution (1 Starter, 1 Bench)
-  let trialStarters = [...squadState.starters];
-  let trialBench = [...squadState.bench];
-
-  const starterId = isP1Starter ? player1Id : player2Id;
-  const benchId = isP1Starter ? player2Id : player1Id;
-
-  const starterObj = getPlayerById(starterId);
-  const benchObj = getPlayerById(benchId);
-
-  // Strict Goalkeeper Rule
-  if ((starterObj.pos === "GK" || benchObj.pos === "GK") && starterObj.pos !== benchObj.pos) {
-    showNotification("Goalkeepers can only be swapped with another Goalkeeper.", "error");
-    squadState.selectedPlayerId = null;
-    renderApp();
-    return;
-  }
-
-  // Execute trial swap
-  const starterIdx = trialStarters.indexOf(starterId);
-  const benchIdx = trialBench.indexOf(benchId);
-
-  trialStarters[starterIdx] = benchId;
-  trialBench[benchIdx] = starterId;
-
-  // Validate trial formation
-  const fullTrialStarterObjs = trialStarters.map(getPlayerById);
-  const validation = isValidFormation(fullTrialStarterObjs);
-
-  if (!validation.valid) {
-    showNotification(validation.reason, "error");
-    squadState.selectedPlayerId = null;
-    renderApp();
-    return;
-  }
-
-  // Commit valid substitution
-  squadState.starters = trialStarters;
-  squadState.bench = trialBench;
-  squadState.selectedPlayerId = null;
-
-  // DYNAMIC FORMATION UPDATE
-  squadState.formation = calculateFormation(fullTrialStarterObjs);
-
-  showNotification(`Subbed ${starterObj.name} out for ${benchObj.name}. Formation: ${squadState.formation}`, "success");
-  saveState();
-  renderApp();
-}
-
-function onPlayerClick(playerId) {
-  if (!squadState.squad.includes(playerId)) return;
-
-  if (!squadState.selectedPlayerId) {
-    squadState.selectedPlayerId = playerId;
-    renderApp();
   } else {
-    handlePlayerSwap(squadState.selectedPlayerId, playerId);
+    autoAssignXIAndBench();
+  }
+
+  if (savedRoles) {
+    try {
+      const roles = JSON.parse(savedRoles);
+      state.captainId = roles.captainId || null;
+      state.viceCaptainId = roles.viceCaptainId || null;
+    } catch (e) {}
+  }
+
+  if (savedWelcome) {
+    state.hasSeenWelcome = JSON.parse(savedWelcome);
   }
 }
 
-// --- 7. TRANSFERS ENGINE (BUY & SELL) ---
+function saveState() {
+  localStorage.setItem('epl_fantasy_squad', JSON.stringify(state.squad));
+  localStorage.setItem('epl_fantasy_welcome', JSON.stringify(state.hasSeenWelcome));
+  localStorage.setItem('epl_fantasy_xi', JSON.stringify({ startingXI: state.startingXI, bench: state.bench }));
+  localStorage.setItem('epl_fantasy_roles', JSON.stringify({ captainId: state.captainId, viceCaptainId: state.viceCaptainId }));
+}
+
+function recalculateBank() {
+  const totalSpent = state.squad.reduce((sum, id) => {
+    const p = INITIAL_PLAYERS.find(item => item.id === id);
+    return sum + (p ? p.price : 0);
+  }, 0);
+  state.bank = parseFloat((INITIAL_BUDGET - totalSpent).toFixed(1));
+}
+
+function autoAssignXIAndBench() {
+  state.startingXI = [];
+  state.bench = [];
+
+  const squadPlayers = state.squad.map(id => INITIAL_PLAYERS.find(p => p.id === id)).filter(Boolean);
+
+  const posOrder = ['GK', 'DEF', 'MID', 'FWD'];
+  posOrder.forEach(pos => {
+    const posPlayers = squadPlayers.filter(p => p.pos === pos);
+    const starterLimit = pos === 'GK' ? 1 : pos === 'DEF' ? 4 : pos === 'MID' ? 4 : 2;
+    
+    posPlayers.forEach((p, idx) => {
+      if (idx < starterLimit && state.startingXI.length < 11) {
+        state.startingXI.push(p.id);
+      } else {
+        state.bench.push(p.id);
+      }
+    });
+  });
+
+  if (state.startingXI.length > 0 && !state.captainId) {
+    state.captainId = state.startingXI[0];
+  }
+  if (state.startingXI.length > 1 && !state.viceCaptainId) {
+    state.viceCaptainId = state.startingXI[1];
+  }
+}
+
+// --- 4. VALIDATION, SQUAD & SWAP ACTIONS ---
+function getPlayerCountByPosition(pos) {
+  return state.squad.filter(id => {
+    const p = INITIAL_PLAYERS.find(item => item.id === id);
+    return p && p.pos === pos;
+  }).length;
+}
+
+function getClubCount(clubName) {
+  return state.squad.filter(id => {
+    const p = INITIAL_PLAYERS.find(item => item.id === id);
+    return p && p.club === clubName;
+  }).length;
+}
+
+function canBuyPlayer(player) {
+  if (state.squad.includes(player.id)) return { allowed: false, reason: "Already in squad" };
+  if (state.squad.length >= MAX_SQUAD_SIZE) return { allowed: false, reason: "Squad full (15/15)" };
+  if (state.bank < player.price) return { allowed: false, reason: "Insufficient budget" };
+  if (getPlayerCountByPosition(player.pos) >= SQUAD_LIMITS[player.pos]) {
+    return { allowed: false, reason: `Max ${SQUAD_LIMITS[player.pos]} ${player.pos}s allowed` };
+  }
+  if (getClubCount(player.club) >= MAX_PER_CLUB) {
+    return { allowed: false, reason: `Max ${MAX_PER_CLUB} players per club` };
+  }
+  return { allowed: true };
+}
 
 function addPlayerToSquad(playerId) {
-  const player = getPlayerById(playerId);
+  const player = INITIAL_PLAYERS.find(p => p.id === playerId);
   if (!player) return;
 
-  if (squadState.squad.includes(playerId)) {
-    showNotification(`${player.name} is already in your squad.`, "error");
+  const check = canBuyPlayer(player);
+  if (!check.allowed) {
+    alert(check.reason);
     return;
   }
 
-  if (squadState.squad.length >= RULES.MAX_SQUAD_SIZE) {
-    showNotification("Squad limit reached (15 players max). Sell a player first.", "error");
-    return;
-  }
-
-  if (squadState.bank < player.price) {
-    showNotification(`Insufficient budget. You need ${player.price.toFixed(1)}m.`, "error");
-    return;
-  }
-
-  const squadObjs = squadState.squad.map(getPlayerById);
-
-  // Position limit check
-  const countInPos = squadObjs.filter(p => p.pos === player.pos).length;
-  if (countInPos >= RULES.POS_LIMITS[player.pos]) {
-    showNotification(`Maximum ${RULES.POS_LIMITS[player.pos]} ${player.pos}s allowed.`, "error");
-    return;
-  }
-
-  // Club limit check
-  const countInClub = squadObjs.filter(p => p.club === player.club).length;
-  if (countInClub >= RULES.MAX_PER_CLUB) {
-    showNotification(`Maximum ${RULES.MAX_PER_CLUB} players allowed from ${player.club}.`, "error");
-    return;
-  }
-
-  // Deduct cost and add to squad
-  squadState.squad.push(playerId);
-  squadState.bank = parseFloat((squadState.bank - player.price).toFixed(1));
-
-  // Determine starting vs bench placement
-  if (squadState.starters.length < 11) {
-    const trialStarters = [...squadState.starters, playerId].map(getPlayerById);
-    if (isValidFormation(trialStarters).valid || trialStarters.length < 11) {
-      squadState.starters.push(playerId);
-    } else {
-      squadState.bench.push(playerId);
-    }
-  } else {
-    squadState.bench.push(playerId);
-  }
-
-  // Update formation
-  const starterObjs = squadState.starters.map(getPlayerById);
-  if (starterObjs.length === 11) {
-    squadState.formation = calculateFormation(starterObjs);
-  }
-
-  showNotification(`Purchased ${player.name} for ${player.price.toFixed(1)}m.`, "success");
+  state.squad.push(playerId);
+  autoAssignXIAndBench();
+  recalculateBank();
   saveState();
   renderApp();
 }
 
 function removePlayerFromSquad(playerId) {
-  const player = getPlayerById(playerId);
-  if (!player || !squadState.squad.includes(playerId)) return;
+  state.squad = state.squad.filter(id => id !== playerId);
+  state.startingXI = state.startingXI.filter(id => id !== playerId);
+  state.bench = state.bench.filter(id => id !== playerId);
 
-  // Remove from arrays
-  squadState.squad = squadState.squad.filter(id => id !== playerId);
-  squadState.starters = squadState.starters.filter(id => id !== playerId);
-  squadState.bench = squadState.bench.filter(id => id !== playerId);
+  if (state.captainId === playerId) state.captainId = state.startingXI[0] || null;
+  if (state.viceCaptainId === playerId) state.viceCaptainId = state.startingXI[1] || null;
+  if (state.selectedForSwap === playerId) state.selectedForSwap = null;
 
-  // Refund money
-  squadState.bank = parseFloat((squadState.bank + player.price).toFixed(1));
-
-  // Reset roles if needed
-  if (squadState.captainId === playerId) squadState.captainId = null;
-  if (squadState.viceCaptainId === playerId) squadState.viceCaptainId = null;
-  if (squadState.selectedPlayerId === playerId) squadState.selectedPlayerId = null;
-
-  // Recalculate formation if remaining starters are full
-  const starterObjs = squadState.starters.map(getPlayerById);
-  if (starterObjs.length === 11) {
-    squadState.formation = calculateFormation(starterObjs);
-  }
-
-  showNotification(`Sold ${player.name} for ${player.price.toFixed(1)}m.`, "info");
+  recalculateBank();
   saveState();
   renderApp();
 }
 
-// --- 8. CAPTAINCY CONTROLS ---
+// BENCH SUBSTITUTION & SWAP SYSTEM
+function swapPlayers(player1Id, player2Id) {
+  const p1 = INITIAL_PLAYERS.find(p => p.id === player1Id);
+  const p2 = INITIAL_PLAYERS.find(p => p.id === player2Id);
 
-function setCaptain(playerId) {
-  if (!squadState.starters.includes(playerId)) {
-    showNotification("Captain must be an active starter in your main XI.", "error");
-    return;
+  if (!p1 || !p2) return;
+
+  const p1InXI = state.startingXI.includes(player1Id);
+  const p2InXI = state.startingXI.includes(player2Id);
+
+  if (p1InXI !== p2InXI) {
+    const starterId = p1InXI ? player1Id : player2Id;
+    const benchId = p1InXI ? player2Id : player1Id;
+
+    const starter = INITIAL_PLAYERS.find(p => p.id === starterId);
+    const benchPlayer = INITIAL_PLAYERS.find(p => p.id === benchId);
+
+    if ((starter.pos === 'GK' || benchPlayer.pos === 'GK') && starter.pos !== benchPlayer.pos) {
+      alert("Goalkeepers can only be swapped with another Goalkeeper.");
+      state.selectedForSwap = null;
+      renderApp();
+      return;
+    }
+
+    state.startingXI = state.startingXI.map(id => id === starterId ? benchId : id);
+    state.bench = state.bench.map(id => id === benchId ? starterId : id);
+  } else {
+    alert("Select one starting XI player and one bench player to make a substitution.");
   }
 
-  if (squadState.viceCaptainId === playerId) {
-    squadState.viceCaptainId = squadState.captainId;
-  }
-  squadState.captainId = playerId;
+  state.selectedForSwap = null;
   saveState();
   renderApp();
-  showNotification(`${getPlayerById(playerId).name} is now Captain.`, "success");
+}
+
+function handlePlayerSelectForSwap(playerId) {
+  if (!state.selectedForSwap) {
+    state.selectedForSwap = playerId;
+  } else if (state.selectedForSwap === playerId) {
+    state.selectedForSwap = null;
+  } else {
+    swapPlayers(state.selectedForSwap, playerId);
+    return;
+  }
+  renderApp();
+}
+
+function navigateToTransfersForPosition(pos) {
+  state.positionFilter = pos;
+  state.activeTab = 'transfers';
+  renderApp();
+}
+
+function setCaptain(playerId) {
+  if (!state.startingXI.includes(playerId)) return;
+  if (state.viceCaptainId === playerId) {
+    state.viceCaptainId = state.captainId;
+  }
+  state.captainId = playerId;
+  saveState();
+  renderApp();
 }
 
 function setViceCaptain(playerId) {
-  if (!squadState.starters.includes(playerId)) {
-    showNotification("Vice-Captain must be an active starter in your main XI.", "error");
-    return;
-  }
-  if (squadState.captainId === playerId) {
-    showNotification("Player is already Captain.", "error");
-    return;
-  }
-
-  squadState.viceCaptainId = playerId;
+  if (!state.startingXI.includes(playerId)) return;
+  if (state.captainId === playerId) return;
+  state.viceCaptainId = playerId;
   saveState();
   renderApp();
-  showNotification(`${getPlayerById(playerId).name} is now Vice-Captain.`, "success");
 }
 
-// --- 9. HELPER UTILITIES ---
+// --- 5. RENDER COMPONENTS ---
 
-function getPlayerById(id) {
-  return INITIAL_PLAYERS.find(p => p.id === id);
-}
+// A. Welcome Onboarding Modal
+function renderWelcomeModal() {
+  if (state.hasSeenWelcome) return '';
 
-function calculateSquadValue() {
-  return squadState.squad
-    .reduce((total, id) => total + (getPlayerById(id)?.price || 0), 0)
-    .toFixed(1);
-}
+  return `
+    <div id="welcome-modal" class="modal-overlay">
+      <div class="modal-card">
+        <h2>Welcome to Ethiopian Premier League Fantasy!</h2>
+        <p>Build your 15-player squad and compete across Gameweeks.</p>
+        
+        <div class="rules-list">
+          <h4>Official Squad Selection Rules:</h4>
+          <ul>
+            <li><strong>Budget:</strong> Br ${INITIAL_BUDGET} Million</li>
+            <li><strong>Squad Size:</strong> 15 Players (2 GK, 5 DEF, 5 MID, 3 FWD)</li>
+            <li><strong>Club Limit:</strong> Max 3 players from any single club</li>
+          </ul>
+        </div>
 
-function getFilteredMarketPlayers() {
-  return INITIAL_PLAYERS.filter(player => {
-    // Position Filter
-    if (squadState.filterPos !== "ALL" && player.pos !== squadState.filterPos) {
-      return false;
-    }
-    // Search Filter
-    if (
-      squadState.searchQuery &&
-      !player.name.toLowerCase().includes(squadState.searchQuery.toLowerCase()) &&
-      !player.club.toLowerCase().includes(squadState.searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
-  }).sort((a, b) => {
-    if (squadState.sortBy === "price") return b.price - a.price;
-    if (squadState.sortBy === "form") return b.form - a.form;
-    return b.points - a.points; // Default sort by points
-  });
-}
+        <p class="guide-tip">
+          <strong>How to start:</strong> Click any empty slot (<span class="plus-badge">+</span>) on the pitch to go directly to the Transfer Market and buy a player for that position.
+        </p>
 
-// --- 10. UI RENDERING ENGINES ---
-
-function renderPlayerCard(player, isStarter) {
-  const isSelected = squadState.selectedPlayerId === player.id;
-  const isCaptain = squadState.captainId === player.id;
-  const isVice = squadState.viceCaptainId === player.id;
-
-  const card = document.createElement("div");
-  card.className = `player-card ${isSelected ? "selected" : ""} ${isStarter ? "starter" : "bench"}`;
-  card.onclick = () => onPlayerClick(player.id);
-
-  card.innerHTML = `
-    <div class="card-header">
-      <span class="player-pos pos-${player.pos.toLowerCase()}">${player.pos}</span>
-      <span class="player-price">${player.price.toFixed(1)}m</span>
-    </div>
-    <div class="player-name">${player.name}</div>
-    <div class="player-club">${player.club}</div>
-    <div class="card-fixture">${player.nextFixture}</div>
-    <div class="card-badges">
-      ${isCaptain ? '<span class="badge captain" title="Captain (2x Points)">C</span>' : ""}
-      ${isVice ? '<span class="badge vice" title="Vice-Captain">V</span>' : ""}
-    </div>
-    <div class="card-actions">
-      ${
-        isStarter
-          ? `
-        <button class="btn-role btn-c" title="Set Captain" onclick="event.stopPropagation(); setCaptain(${player.id})">C</button>
-        <button class="btn-role btn-v" title="Set Vice-Captain" onclick="event.stopPropagation(); setViceCaptain(${player.id})">V</button>
-      `
-          : ""
-      }
-      <button class="btn-sell" title="Sell Player" onclick="event.stopPropagation(); removePlayerFromSquad(${player.id})">Sell</button>
+        <button id="close-welcome-btn" class="btn-primary">Build My Squad</button>
+      </div>
     </div>
   `;
-  return card;
 }
 
-function renderPitch() {
-  const pitchContainer = document.getElementById("pitch");
-  if (!pitchContainer) return;
-  pitchContainer.innerHTML = "";
-
-  const starterObjs = squadState.starters.map(getPlayerById).filter(Boolean);
-
-  // Group starters by line
-  const lines = {
-    GK: starterObjs.filter(p => p.pos === "GK"),
-    DEF: starterObjs.filter(p => p.pos === "DEF"),
-    MID: starterObjs.filter(p => p.pos === "MID"),
-    FWD: starterObjs.filter(p => p.pos === "FWD")
-  };
-
-  ["GK", "DEF", "MID", "FWD"].forEach(posGroup => {
-    const row = document.createElement("div");
-    row.className = `pitch-row ${posGroup.toLowerCase()}-row`;
-
-    lines[posGroup].forEach(player => {
-      row.appendChild(renderPlayerCard(player, true));
-    });
-
-    pitchContainer.appendChild(row);
-  });
-}
-
-function renderBench() {
-  const benchContainer = document.getElementById("bench");
-  if (!benchContainer) return;
-  benchContainer.innerHTML = "";
-
-  squadState.bench
-    .map(getPlayerById)
-    .filter(Boolean)
-    .forEach(player => {
-      benchContainer.appendChild(renderPlayerCard(player, false));
-    });
-}
-
-function renderMarket() {
-  const marketContainer = document.getElementById("market-list");
-  if (!marketContainer) return;
-  marketContainer.innerHTML = "";
-
-  const marketPlayers = getFilteredMarketPlayers();
-
-  if (marketPlayers.length === 0) {
-    marketContainer.innerHTML = `<div class="empty-market">No players match your current filter criteria.</div>`;
-    return;
-  }
-
-  marketPlayers.forEach(player => {
-    const isOwned = squadState.squad.includes(player.id);
-    const item = document.createElement("div");
-    item.className = `market-item ${isOwned ? "owned" : ""}`;
-
-    item.innerHTML = `
-      <div class="market-info" onclick="openPlayerModal(${player.id})">
-        <span class="player-pos pos-${player.pos.toLowerCase()}">${player.pos}</span>
-        <div class="market-details">
-          <strong class="market-name">${player.name}</strong>
-          <span class="market-subtext">${player.club} • Pts: ${player.points} • Form: ${player.form}</span>
+// B. Header & Squad Overview Bar
+function renderHeaderStats() {
+  const squadVal = (INITIAL_BUDGET - state.bank).toFixed(1);
+  return `
+    <header class="app-header">
+      <div class="brand">
+        <h1>EPL Fantasy</h1>
+        <span class="gw-badge">Gameweek ${state.currentGameweek}</span>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-box">
+          <span class="label">Players</span>
+          <span class="val ${state.squad.length === 15 ? 'complete' : ''}">${state.squad.length} / 15</span>
+        </div>
+        <div class="stat-box">
+          <span class="label">Bank</span>
+          <span class="val">Br ${state.bank.toFixed(1)}M</span>
+        </div>
+        <div class="stat-box">
+          <span class="label">Squad Value</span>
+          <span class="val">Br ${squadVal}M</span>
         </div>
       </div>
-      <div class="market-price-action">
-        <span class="market-price">${player.price.toFixed(1)}m</span>
-        ${
-          isOwned
-            ? `<button class="btn-action btn-sell" data-sell-id="${player.id}">Sell</button>`
-            : `<button class="btn-action btn-buy" data-buy-id="${player.id}">Buy</button>`
-        }
-      </div>
-    `;
-    marketContainer.appendChild(item);
+    </header>
+  `;
+}
+
+// C. Tab Navigation
+function renderNavigation() {
+  return `
+    <nav class="tab-nav">
+      <button class="tab-btn ${state.activeTab === 'pick-team' ? 'active' : ''}" data-tab="pick-team">Pick Team</button>
+      <button class="tab-btn ${state.activeTab === 'transfers' ? 'active' : ''}" data-tab="transfers">Transfers</button>
+      <button class="tab-btn ${state.activeTab === 'points' ? 'active' : ''}" data-tab="points">Points</button>
+      <button class="tab-btn ${state.activeTab === 'rules' ? 'active' : ''}" data-tab="rules">Rules</button>
+    </nav>
+  `;
+}
+
+// D. Pitch & Squad View (Pick Team)
+function renderPitchView() {
+  const positions = [
+    { key: 'GK', name: 'Goalkeeper', req: 1 },
+    { key: 'DEF', name: 'Defenders', req: 4 },
+    { key: 'MID', name: 'Midfielders', req: 4 },
+    { key: 'FWD', name: 'Forwards', req: 2 }
+  ];
+
+  let html = `<div class="pitch-container"><div class="pitch">`;
+
+  positions.forEach(posGroup => {
+    const startersInPos = state.startingXI
+      .map(id => INITIAL_PLAYERS.find(p => p.id === id))
+      .filter(p => p && p.pos === posGroup.key);
+
+    html += `<div class="pitch-row position-${posGroup.key.toLowerCase()}">`;
+
+    for (let i = 0; i < posGroup.req; i++) {
+      const player = startersInPos[i];
+      if (player) {
+        const isC = state.captainId === player.id;
+        const isVC = state.viceCaptainId === player.id;
+        const isSelectedSwap = state.selectedForSwap === player.id;
+
+        html += `
+          <div class="player-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
+            <button class="remove-btn" data-remove="${player.id}" title="Remove player">×</button>
+            <div class="shirt-icon">${player.pos}</div>
+            <div class="player-name">
+              ${player.name}
+              ${isC ? '<span class="role-badge captain">C</span>' : ''}
+              ${isVC ? '<span class="role-badge vice">VC</span>' : ''}
+            </div>
+            <div class="player-club">${player.club}</div>
+            <div class="player-price">Br ${player.price}M</div>
+            <div class="card-actions">
+              <button class="btn-role" data-set-c="${player.id}">C</button>
+              <button class="btn-role" data-set-vc="${player.id}">VC</button>
+            </div>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="player-card empty" data-pick-pos="${posGroup.key}">
+            <div class="add-slot-btn">+</div>
+            <div class="slot-label">Add ${posGroup.key}</div>
+          </div>
+        `;
+      }
+    }
+
+    html += `</div>`;
   });
-}
 
-function renderHeaderInfo() {
-  const formationDisplay = document.getElementById("formation-display");
-  const bankDisplay = document.getElementById("bank-display");
-  const squadValDisplay = document.getElementById("squad-val-display");
-  const squadCountDisplay = document.getElementById("squad-count-display");
+  html += `</div>`;
 
-  if (formationDisplay) formationDisplay.textContent = squadState.formation;
-  if (bankDisplay) bankDisplay.textContent = `${squadState.bank.toFixed(1)}m`;
-  if (squadValDisplay) squadValDisplay.textContent = `${calculateSquadValue()}m`;
-  if (squadCountDisplay) squadCountDisplay.textContent = `${squadState.squad.length}/${RULES.MAX_SQUAD_SIZE}`;
-}
-
-function showNotification(msg, type = "info") {
-  const toast = document.getElementById("toast-notification");
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.className = `toast ${type} show`;
-  setTimeout(() => {
-    toast.className = "toast";
-  }, 3200);
-}
-
-// --- 11. PLAYER MODAL DETAILS ENGINE ---
-
-function openPlayerModal(playerId) {
-  const player = getPlayerById(playerId);
-  if (!player) return;
-
-  const modal = document.getElementById("player-modal");
-  const modalBody = document.getElementById("modal-body");
-  if (!modal || !modalBody) return;
-
-  modalBody.innerHTML = `
-    <div class="modal-header-info">
-      <h2>${player.name}</h2>
-      <p>${player.club} | <span class="pos-${player.pos.toLowerCase()}">${player.pos}</span></p>
+  // Render Bench
+  const benchPlayers = state.bench.map(id => INITIAL_PLAYERS.find(p => p.id === id)).filter(Boolean);
+  html += `
+    <div class="bench-container">
+      <h3>Substitutes Bench</h3>
+      <div class="bench-row">
+        ${benchPlayers.length === 0 ? '<p class="empty-bench">No substitute players selected yet.</p>' : ''}
+        ${benchPlayers.map(player => {
+          const isSelectedSwap = state.selectedForSwap === player.id;
+          return `
+            <div class="player-card bench-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
+              <button class="remove-btn" data-remove="${player.id}">×</button>
+              <div class="shirt-icon bench-icon">${player.pos}</div>
+              <div class="player-name">${player.name}</div>
+              <div class="player-club">${player.club}</div>
+              <div class="player-price">Br ${player.price}M</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
-    <div class="modal-stats-grid">
-      <div class="stat-box"><span>Price</span><strong>${player.price.toFixed(1)}m</strong></div>
-      <div class="stat-box"><span>Total Points</span><strong>${player.points}</strong></div>
-      <div class="stat-box"><span>Form</span><strong>${player.form}</strong></div>
-      <div class="stat-box"><span>Goals</span><strong>${player.goals}</strong></div>
-      <div class="stat-box"><span>Assists</span><strong>${player.assists}</strong></div>
-      <div class="stat-box"><span>Clean Sheets</span><strong>${player.cleanSheets}</strong></div>
-      <div class="stat-box"><span>Yellow Cards</span><strong>${player.yellowCards}</strong></div>
-      <div class="stat-box"><span>Selected By</span><strong>${player.selectedBy}</strong></div>
-    </div>
-    <div class="modal-fixture-next">
-      <strong>Next Fixture:</strong> ${player.nextFixture}
+  </div>`;
+
+  return html;
+}
+
+// E. Transfer Market View
+function renderTransferMarket() {
+  const filteredPlayers = INITIAL_PLAYERS.filter(player => {
+    const matchesPos = state.positionFilter === 'ALL' || player.pos === state.positionFilter;
+    const matchesSearch = player.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+                          player.club.toLowerCase().includes(state.searchQuery.toLowerCase());
+    return matchesPos && matchesSearch;
+  });
+
+  return `
+    <div class="transfer-gate">
+      <div class="filter-controls">
+        <input 
+          type="text" 
+          id="player-search" 
+          placeholder="Search player or club..." 
+          value="${state.searchQuery}"
+        />
+        <div class="position-filters">
+          ${['ALL', 'GK', 'DEF', 'MID', 'FWD'].map(pos => `
+            <button 
+              class="filter-chip ${state.positionFilter === pos ? 'active' : ''}" 
+              data-filter-pos="${pos}">
+              ${pos}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="market-list">
+        ${filteredPlayers.length === 0 ? `<p class="no-results">No players found matching your search.</p>` : ''}
+        ${filteredPlayers.map(player => {
+          const isSelected = state.squad.includes(player.id);
+          const check = canBuyPlayer(player);
+
+          return `
+            <div class="market-item ${isSelected ? 'in-squad' : ''}">
+              <div class="item-info">
+                <span class="pos-badge ${player.pos.toLowerCase()}">${player.pos}</span>
+                <div class="details">
+                  <span class="name">${player.name}</span>
+                  <span class="club">${player.club} •${player.points} pts</span>
+                </div>
+              </div>
+              <div class="item-action">
+                <span class="price">Br ${player.price}M</span>${isSelected ? `
+                  <button class="btn-sell" data-sell-id="${player.id}">Remove</button>
+                ` : `
+                  <button 
+                    class="btn-buy" 
+                    data-buy-id="${player.id}" 
+                    ${!check.allowed ? `disabled title="${check.reason}"` : ''}>
+                    + Buy
+                  </button>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
-  modal.classList.add("open");
 }
 
-function closePlayerModal() {
-  const modal = document.getElementById("player-modal");
-  if (modal) modal.classList.remove("open");
+// F. Points & Scoreboard View
+function renderPointsView() {
+  let totalTeamPoints = 0;
+
+  const pointsListHtml = state.startingXI.map(id => {
+    const p = INITIAL_PLAYERS.find(item => item.id === id);
+    if (!p) return '';
+
+    let multiplier = 1;
+    let badge = '';
+    if (state.captainId === p.id) {
+      multiplier = 2;
+      badge = ' (C)';
+    } else if (state.viceCaptainId === p.id) {
+      badge = ' (VC)';
+    }
+
+    const calculatedPts = p.points * multiplier;
+    totalTeamPoints += calculatedPts;
+
+    return `
+      <div class="score-row">
+        <span class="player-meta">${p.name}${badge} - <small>${p.club}</small></span>
+        <span class="player-score">${calculatedPts} pts ${multiplier > 1 ? '(2x)' : ''}</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="points-container">
+      <div class="total-score-card">
+        <h2>Gameweek ${state.currentGameweek} Score</h2>
+        <div class="big-score">${totalTeamPoints}</div>
+        <p>Total Points across Starting XI</p>
+      </div>
+
+      <div class="breakdown-card">
+        <h3>Player Points Breakdown</h3>
+        ${pointsListHtml || '<p>Select your squad to calculate Gameweek points.</p>'}
+      </div>
+    </div>
+  `;
 }
 
-// --- 12. FILTER & SORT EVENT CONTROLLERS ---
-
-function setupFilterControls() {
-  const filterBtns = document.querySelectorAll("[data-filter-pos]");
-  filterBtns.forEach(btn => {
-    btn.onclick = e => {
-      filterBtns.forEach(b => b.classList.remove("active"));
-      e.currentTarget.classList.add("active");
-      squadState.filterPos = e.currentTarget.dataset.filterPos;
-      renderMarket();
-    };
-  });
-
-  const searchInput = document.getElementById("market-search");
-  if (searchInput) {
-    searchInput.oninput = e => {
-      squadState.searchQuery = e.target.value;
-      renderMarket();
-    };
-  }
-
-  const sortSelect = document.getElementById("market-sort");
-  if (sortSelect) {
-    sortSelect.onchange = e => {
-      squadState.sortBy = e.target.value;
-      renderMarket();
-    };
-  }
+// G. Rules View
+function renderRulesView() {
+  return `
+    <div class="rules-container">
+      <h2>Ethiopian Fantasy Premier League Rules</h2>
+      <ul class="rules-guide">
+        <li><strong>Squad Budget:</strong> You start with a maximum budget of Br 100.0M.</li>
+        <li><strong>Squad Size:</strong> Exactly 15 players (2 Goalkeepers, 5 Defenders, 5 Midfielders, 3 Forwards).</li>
+        <li><strong>Club Limit:</strong> Max 3 players from any single club (e.g., St. George, Ethiopia Bunna).</li>
+        <li><strong>Captain (C):</strong> Earns 2x points for the Gameweek.</li>
+        <li><strong>Vice-Captain (VC):</strong> Receives 2x points if your Captain does not play.</li>
+        <li><strong>Substitutions:</strong> Click a player on the pitch and a player on the bench to swap them.</li>
+      </ul>
+    </div>
+  `;
 }
 
-// --- 13. MASTER RENDER & EVENT ATTACHMENT ---
-
+// --- 6. MAIN RENDER CONTROLLER ---
 function renderApp() {
-  renderHeaderInfo();
-  renderPitch();
-  renderBench();
-  renderMarket();
+  const appRoot = document.getElementById('app') || document.body;
+
+  let mainContent = '';
+  if (state.activeTab === 'pick-team') {
+    mainContent = renderPitchView();
+  } else if (state.activeTab === 'transfers') {
+    mainContent = renderTransferMarket();
+  } else if (state.activeTab === 'points') {
+    mainContent = renderPointsView();
+  } else if (state.activeTab === 'rules') {
+    mainContent = renderRulesView();
+  }
+
+  appRoot.innerHTML = `
+    <div class="app-container">
+      ${renderWelcomeModal()}
+      ${renderHeaderStats()}
+      ${renderNavigation()}
+      <main class="content-body">
+        ${mainContent}
+      </main>
+    </div>
+  `;
+
   attachEventListeners();
 }
 
+// --- 7. EVENT LISTENERS ---
 function attachEventListeners() {
-  // Market Buy Buttons
-  document.querySelectorAll("[data-buy-id]").forEach(btn => {
-    btn.onclick = e => {
+  // Onboarding Modal Close
+  const closeBtn = document.getElementById('close-welcome-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      state.hasSeenWelcome = true;
+      saveState();
+      renderApp();
+    });
+  }
+
+  // Navigation Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      state.activeTab = e.currentTarget.dataset.tab;
+      renderApp();
+    });
+  });
+
+  // Pick Slot (+ Button) Direct Routing
+  document.querySelectorAll('[data-pick-pos]').forEach(slot => {
+    slot.addEventListener('click', (e) => {
+      const pos = e.currentTarget.dataset.pickPos;
+      navigateToTransfersForPosition(pos);
+    });
+  });
+
+  // Card Click for Bench Substitution / Swapping
+  document.querySelectorAll('.player-card.filled').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.remove-btn') || e.target.closest('.btn-role')) return;
+      const playerId = parseInt(card.dataset.playerId, 10);
+      if (playerId) handlePlayerSelectForSwap(playerId);
+    });
+  });
+
+  // Remove Player
+  document.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = parseInt(e.currentTarget.dataset.remove, 10);
+      removePlayerFromSquad(id);
+    });
+  });
+
+  // Captain Assignment
+  document.querySelectorAll('[data-set-c]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = parseInt(e.currentTarget.dataset.setC, 10);
+      setCaptain(id);
+    });
+  });
+
+  // Vice Captain Assignment
+  document.querySelectorAll('[data-set-vc]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = parseInt(e.currentTarget.dataset.setVc, 10);
+      setViceCaptain(id);
+    });
+  });
+
+  // Position Filter Chips
+  document.querySelectorAll('[data-filter-pos]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      state.positionFilter = e.currentTarget.dataset.filterPos;
+      renderApp();
+    });
+  });
+
+  // Search Input with Focus Retention
+  const searchInput = document.getElementById('player-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      const cursor = e.target.selectionStart;
+      renderApp();
+      const refreshedInput = document.getElementById('player-search');
+      if (refreshedInput) {
+        refreshedInput.focus();
+        refreshedInput.setSelectionRange(cursor, cursor);
+      }
+    });
+  }
+
+  // Buy Player
+  document.querySelectorAll('[data-buy-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       const id = parseInt(e.currentTarget.dataset.buyId, 10);
       addPlayerToSquad(id);
-    };
+    });
   });
 
-  // Market Sell Buttons
-  document.querySelectorAll("[data-sell-id]").forEach(btn => {
-    btn.onclick = e => {
+  // Sell Player
+  document.querySelectorAll('[data-sell-id]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       const id = parseInt(e.currentTarget.dataset.sellId, 10);
       removePlayerFromSquad(id);
-    };
+    });
   });
-
-  // Reset Squad Button
-  const resetBtn = document.getElementById("btn-reset-squad");
-  if (resetBtn) {
-    resetBtn.onclick = resetSquadState;
-  }
-
-  // Close Modal Button
-  const closeModalBtn = document.getElementById("btn-close-modal");
-  if (closeModalBtn) {
-    closeModalBtn.onclick = closePlayerModal;
-  }
 }
 
-// --- 14. APPLICATION INITIALIZATION ---
-
-document.addEventListener("DOMContentLoaded", () => {
+// --- 8. INIT APP ---
+document.addEventListener('DOMContentLoaded', () => {
   loadState();
-
-  // Initial calculation of formation on startup
-  const starterObjs = squadState.starters.map(getPlayerById).filter(Boolean);
-  if (starterObjs.length === 11) {
-    squadState.formation = calculateFormation(starterObjs);
-  }
-
-  setupFilterControls();
   renderApp();
 });
