@@ -1,1 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethiopian Premier League Fantasy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <!-- Header / Navbar -->
+    <header class="fantasy-header">
+        <div class="logo">⚽ EPL Fantasy (Ethiopia)</div>
+        <div class="user-stats">
+            <div class="stat-box"><span>Budget:</span> <span id="budget-val">100.0</span>M ETB</div>
+            <div class="stat-box"><span>Total Points:</span> <span id="points-val">0</span></div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="fantasy-nav">
+        <button class="tab-btn active" onclick="switchTab('squad')">My Team</button>
+        <button class="tab-btn" onclick="switchTab('market')">Transfer Market</button>
+        <button class="tab-btn" onclick="switchTab('leagues')">Leagues</button>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container">
+        
+        <!-- SQUAD VIEW (Pitch Layout) -->
+        <section id="squad-section" class="view-section active">
+            <h2>Your Starting XI & Squad</h2>
+            <div class="pitch-container">
+                <div class="pitch-row fwd-row">
+                    <!-- Forwards slots -->
+                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
+                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
+                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
+                </div>
+                <div class="pitch-row mid-row">
+                    <!-- Midfielders slots -->
+                    <div class="player-slot" data-pos="MID">Empty MID</div>
+                    <div class="player-slot" data-pos="MID">Empty MID</div>
+                    <div class="player-slot" data-pos="MID">Empty MID</div>
+                    <div class="player-slot" data-pos="MID">Empty MID</div>
+                </div>
+                <div class="pitch-row def-row">
+                    <!-- Defenders slots -->
+                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
+                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
+                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
+                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
+                </div>
+                <div class="pitch-row gk-row">
+                    <!-- Goalkeeper slot -->
+                    <div class="player-slot" data-pos="GK">Empty GK</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRANSFER MARKET VIEW -->
+        <section id="market-section" class="view-section" style="display: none;">
+            <h2>Player Transfer Market</h2>
+            <div class="market-controls">
+                <input type="text" id="search-bar" placeholder="Search player or team...">
+                <select id="pos-filter">
+                    <option value="ALL">All Positions</option>
+                    <option value="GK">GK</option>
+                    <option value="DEF">DEF</option>
+                    <option value="MID">MID</option>
+                    <option value="FWD">FWD</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Team</th>
+                            <th>Pos</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="player-market-body">
+                        <!-- Populated dynamically via app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
