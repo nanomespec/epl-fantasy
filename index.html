@@ -13,6 +13,7 @@
         <div class="logo">⚽ EPL Fantasy (Ethiopia)</div>
         <div class="user-stats">
             <div class="stat-box"><span>Budget:</span> <span id="budget-val">100.0</span>M ETB</div>
+            <div class="stat-box"><span>Squad Value:</span> <span id="squad-val">0.0</span>M ETB</div>
             <div class="stat-box"><span>Free Transfers:</span> <span id="transfers-val">1</span></div>
             <div class="stat-box"><span>GW Hits:</span> <span id="hits-val">0</span> pts</div>
             <div class="stat-box"><span>Total Points:</span> <span id="points-val">0</span></div>
@@ -23,17 +24,27 @@
     <nav class="fantasy-nav">
         <button class="tab-btn active" onclick="switchTab('squad', event)">My Team</button>
         <button class="tab-btn" onclick="switchTab('market', event)">Transfer Market</button>
+        <button class="tab-btn" onclick="switchTab('fixtures', event)">Fixtures & FDR</button>
         <button class="tab-btn" onclick="switchTab('leagues', event)">Leagues</button>
+        <button class="tab-btn" onclick="switchTab('admin', event)">Admin & Sim</button>
     </nav>
 
     <!-- Main Container -->
     <main class="container">
         
-        <!-- SQUAD VIEW (Pitch & Bench Layout) -->
+        <!-- SQUAD VIEW -->
         <section id="squad-section" class="view-section active">
             <div class="section-header">
-                <h2>Your 15-Man Squad & Tactics</h2>
+                <div>
+                    <h2>Your 15-Man Squad & Tactics</h2>
+                    <p id="formation-display" class="formation-text">Current Formation: 4-4-2</p>
+                </div>
                 <button class="action-btn sim-btn" onclick="simulateGameweek()">⚡ Simulate Gameweek</button>
+            </div>
+
+            <!-- Quota Status Bar -->
+            <div class="quota-bar" id="quota-bar">
+                <span>Quota: GK: <b id="q-gk">0/2</b> | DEF: <b id="q-def">0/5</b> | MID: <b id="q-mid">0/5</b> | FWD: <b id="q-fwd">0/3</b></span>
             </div>
 
             <!-- Chips Bar -->
@@ -45,7 +56,7 @@
                 <button class="chip-btn" id="chip-triplecaptain" onclick="toggleChip('triplecaptain')">Triple Captain</button>
             </div>
 
-            <!-- Starting XI Pitch -->
+            <!-- Pitch Layout -->
             <div class="pitch-container">
                 <div class="pitch-title">STARTING XI</div>
                 <div class="pitch-row fwd-row" id="pitch-FWD"></div>
@@ -57,9 +68,7 @@
             <!-- Bench Section -->
             <div class="bench-container">
                 <h3>Substitutes Bench</h3>
-                <div class="bench-row" id="bench-row">
-                    <!-- Benched players rendered dynamically -->
-                </div>
+                <div class="bench-row" id="bench-row"></div>
             </div>
         </section>
 
@@ -75,6 +84,12 @@
                     <option value="MID">MID</option>
                     <option value="FWD">FWD</option>
                 </select>
+                <select id="sort-filter">
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="price-asc">Price: Low to High</option>
+
+                    <option value="selected">Highest Ownership %</option>
+                </select>
             </div>
             <div class="table-responsive">
                 <table class="market-table">
@@ -83,20 +98,26 @@
                             <th>Name</th>
                             <th>Team</th>
                             <th>Pos</th>
-                            <th>Price</th>
+                            <th>Current Price</th>
+                            <th>Selling Price</th>
+                            <th>Owned %</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody id="player-market-body">
-                        <!-- Populated dynamically via app.js -->
-                    </tbody>
+                    <tbody id="player-market-body"></tbody>
                 </table>
             </div>
         </section>
 
-        <!-- LEAGUES & LEADERBOARD VIEW -->
+        <!-- FIXTURES & FDR VIEW -->
+        <section id="fixtures-section" class="view-section" style="display: none;">
+            <h2>Ethiopian Premier League - Upcoming Fixtures & FDR</h2>
+            <div id="fixtures-container" class="fixtures-grid"></div>
+        </section>
+
+        <!-- LEAGUES VIEW -->
         <section id="leagues-section" class="view-section" style="display: none;">
-            <h2>Ethiopian Premier League - Global Leaderboard</h2>
+            <h2>Global & Private Leagues</h2>
             <div class="table-responsive">
                 <table class="market-table">
                     <thead>
@@ -107,14 +128,43 @@
                             <th>Total Points</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-body">
-                        <!-- Populated dynamically via app.js -->
-                    </tbody>
+                    <tbody id="leaderboard-body"></tbody>
                 </table>
             </div>
         </section>
 
+        <!-- ADMIN & MATCH INPUT PANEL -->
+        <section id="admin-section" class="view-section" style="display: none;">
+            <h2>Admin Statistics & Match Controller</h2>
+            <div class="admin-card">
+                <h3>Manual Score & Event Override</h3>
+                <p>Select a player to assign real match events (Goals, Assists, Cards, Clean Sheets) for the upcoming gameweek:</p>
+                <div class="admin-form">
+                    <select id="admin-player-select"></select>
+                    <input type="number" id="admin-goals" placeholder="Goals Scored" min="0" value="0">
+                    <input type="number" id="admin-assists" placeholder="Assists" min="0" value="0">
+                    <select id="admin-cleansheet">
+                        <option value="0">Clean Sheet: No</option>
+                        <option value="1">Clean Sheet: Yes</option>
+                    </select>
+                    <button class="action-btn sim-btn" onclick="applyAdminStats()">Record Player Performance</button>
+                </div>
+            </div>
+            <div class="admin-card" style="margin-top: 1rem;">
+                <h3>System Reset</h3>
+                <button class="remove-btn" onclick="resetAllData()">Reset Storage & Restart Game</button>
+            </div>
+        </section>
+
     </main>
+
+    <!-- PLAYER DETAILS MODAL -->
+    <div id="player-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closePlayerModal()">&times;</span>
+            <div id="modal-content"></div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
