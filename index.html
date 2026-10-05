@@ -13,34 +13,52 @@
         <div class="logo">⚽ EPL Fantasy (Ethiopia)</div>
         <div class="user-stats">
             <div class="stat-box"><span>Budget:</span> <span id="budget-val">100.0</span>M ETB</div>
+            <div class="stat-box"><span>Free Transfers:</span> <span id="transfers-val">1</span></div>
+            <div class="stat-box"><span>GW Hits:</span> <span id="hits-val">0</span> pts</div>
             <div class="stat-box"><span>Total Points:</span> <span id="points-val">0</span></div>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
     <nav class="fantasy-nav">
-        <button class="tab-btn active" onclick="switchTab('squad')">My Team</button>
-        <button class="tab-btn" onclick="switchTab('market')">Transfer Market</button>
+        <button class="tab-btn active" onclick="switchTab('squad', event)">My Team</button>
+        <button class="tab-btn" onclick="switchTab('market', event)">Transfer Market</button>
+        <button class="tab-btn" onclick="switchTab('leagues', event)">Leagues</button>
     </nav>
 
     <!-- Main Container -->
     <main class="container">
         
-        <!-- SQUAD VIEW (Pitch Layout) -->
+        <!-- SQUAD VIEW (Pitch & Bench Layout) -->
         <section id="squad-section" class="view-section active">
-            <h2>Your Starting Squad & Pitch</h2>
+            <div class="section-header">
+                <h2>Your 15-Man Squad & Tactics</h2>
+                <button class="action-btn sim-btn" onclick="simulateGameweek()">⚡ Simulate Gameweek</button>
+            </div>
+
+            <!-- Chips Bar -->
+            <div class="chips-bar">
+                <span>Active Chips:</span>
+                <button class="chip-btn" id="chip-wildcard" onclick="toggleChip('wildcard')">Wildcard</button>
+                <button class="chip-btn" id="chip-freehit" onclick="toggleChip('freehit')">Free Hit</button>
+                <button class="chip-btn" id="chip-benchboost" onclick="toggleChip('benchboost')">Bench Boost</button>
+                <button class="chip-btn" id="chip-triplecaptain" onclick="toggleChip('triplecaptain')">Triple Captain</button>
+            </div>
+
+            <!-- Starting XI Pitch -->
             <div class="pitch-container">
-                <div class="pitch-row fwd-row" id="pitch-FWD">
-                    <div class="player-slot placeholder">Empty FWD</div>
-                </div>
-                <div class="pitch-row mid-row" id="pitch-MID">
-                    <div class="player-slot placeholder">Empty MID</div>
-                </div>
-                <div class="pitch-row def-row" id="pitch-DEF">
-                    <div class="player-slot placeholder">Empty DEF</div>
-                </div>
-                <div class="pitch-row gk-row" id="pitch-GK">
-                    <div class="player-slot placeholder">Empty GK</div>
+                <div class="pitch-title">STARTING XI</div>
+                <div class="pitch-row fwd-row" id="pitch-FWD"></div>
+                <div class="pitch-row mid-row" id="pitch-MID"></div>
+                <div class="pitch-row def-row" id="pitch-DEF"></div>
+                <div class="pitch-row gk-row" id="pitch-GK"></div>
+            </div>
+
+            <!-- Bench Section -->
+            <div class="bench-container">
+                <h3>Substitutes Bench</h3>
+                <div class="bench-row" id="bench-row">
+                    <!-- Benched players rendered dynamically -->
                 </div>
             </div>
         </section>
@@ -70,6 +88,26 @@
                         </tr>
                     </thead>
                     <tbody id="player-market-body">
+                        <!-- Populated dynamically via app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- LEAGUES & LEADERBOARD VIEW -->
+        <section id="leagues-section" class="view-section" style="display: none;">
+            <h2>Ethiopian Premier League - Global Leaderboard</h2>
+            <div class="table-responsive">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Manager / Team</th>
+                            <th>GW Score</th>
+                            <th>Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
                         <!-- Populated dynamically via app.js -->
                     </tbody>
                 </table>
