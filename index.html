@@ -16,24 +16,76 @@
             <span>ETHIOPIAN FANTASY</span>
         </div>
         <nav class="top-nav">
-            <button class="nav-btn active" data-tab="pick-team" onclick="switchTab('pick-team')">Pick Team</button>
+            <button class="nav-btn active" data-tab="pick-team" onclick="switchTab('pick-team')">Points & Team</button>
             <button class="nav-btn" data-tab="transfers" onclick="switchTab('transfers')">Transfers</button>
             <button class="nav-btn" data-tab="leagues" onclick="switchTab('leagues')">Leagues</button>
             <button class="nav-btn" data-tab="admin" onclick="switchTab('admin')">Fixtures & Sim</button>
         </nav>
     </header>
 
-    <div class="status-bar">
-        <div class="status-item">Gameweek <span id="gw-counter">1</span></div>
-        <div class="status-item">Budget <span>£<span id="budget-val">100.0</span>m</span></div>
-        <div class="status-item">Total Points <span id="points-val">0</span></div>
-        <div class="status-item">Free Transfers <span id="transfers-val">1</span></div>
-    </div>
-
     <main class="app-container">
         
-        <!-- TAB 1: PICK TEAM -->
+        <!-- TAB 1: POINTS & PICK TEAM -->
         <div id="tab-pick-team" class="tab-view active">
+            
+            <!-- NEW FPL POINTS DASHBOARD -->
+            <div class="points-dashboard">
+                <div class="pd-header">
+                    <div class="team-identity">
+                        <div class="team-avatar">
+                            <img src="https://fantasy.premierleague.com/static/media/default-crest-200.72ce87bf.png" alt="Crest" style="width:100%; border-radius:50%;">
+                        </div>
+                        <h2>nanome</h2>
+                    </div>
+                    <button class="help-btn">?</button>
+                </div>
+
+                <div class="pd-gameweek-nav">
+                    <button class="nav-arrow">&lt;</button>
+                    <h3>Gameweek <span id="dash-gw">1</span></h3>
+                    <button class="nav-arrow">&gt;</button>
+                </div>
+
+                <div class="pd-stats-grid">
+                    <div class="pd-side-stats">
+                        <div class="stat-block">
+                            <span class="stat-val" id="dash-avg">0</span>
+                            <span class="stat-label">Average Points</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-block clickable">
+                            <span class="stat-val" id="dash-highest">0</span>
+                            <span class="stat-label">Highest Points &rarr;</span>
+                        </div>
+                    </div>
+
+                    <div class="pd-center-stats">
+                        <div class="total-points-card">
+                            <div class="badge-top">
+                                <span class="big-points" id="dash-total-pts">0</span>
+                                <span class="points-label">Total Points</span>
+                            </div>
+                            <div class="badge-bottom" id="dash-chip-bar" style="display:none;">
+                                <span id="dash-chip-name">Free Hit</span>
+                            </div>
+                        </div>
+                        <div class="totw-link"><span class="star-icon">★</span> Team of the Week &rarr;</div>
+                    </div>
+
+                    <div class="pd-side-stats">
+                        <div class="stat-block">
+                            <span class="stat-val" id="dash-rank">1,402</span>
+                            <span class="stat-label">GW Rank</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-block clickable">
+                            <span class="stat-val" id="dash-transfers">0</span>
+                            <span class="stat-label">Transfers &rarr;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="layout-grid">
                 <div class="pitch-section">
                     <div class="chips-bar">
@@ -54,9 +106,10 @@
                 
                 <div class="info-section">
                     <div class="card info-card">
-                        <h3>Gameweek Info</h3>
-                        <p style="margin: 10px 0;">Latest GW Score: <strong id="last-gw-score" style="color:var(--fpl-purple); font-size:1.2rem;">0</strong> pts</p>
-                        <p id="formation-display" style="font-weight:bold; color:#666;">Formation: 0-0-0</p>
+                        <h3>Team Details</h3>
+                        <p style="margin: 10px 0;">Overall Points: <strong id="overall-pts-val" style="color:var(--fpl-purple);">0</strong></p>
+                        <p>Remaining Budget: <strong style="color:var(--fpl-purple);">£<span id="budget-val">100.0</span>m</strong></p>
+                        <p id="formation-display" style="font-weight:bold; color:#666; margin-top:10px;">Formation: 0-0-0</p>
                         <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
                         <p style="font-size:0.85rem; color:#888;">Ensure exactly 11 players are on the pitch with a valid formation (Min: 3 DEF, 2 MID, 1 FWD) before simulating.</p>
                     </div>
@@ -153,9 +206,7 @@
                     </table>
                     
                     <h4 style="margin-top:20px; border-bottom: 2px solid var(--fpl-green); padding-bottom:5px; color:var(--fpl-purple);">Latest H2H Results</h4>
-                    <div id="h2h-fixtures-list" class="h2h-fixtures">
-                        <!-- Populated by JS -->
-                    </div>
+                    <div id="h2h-fixtures-list" class="h2h-fixtures"></div>
                 </div>
             </div>
         </div>
@@ -165,16 +216,15 @@
             <div class="layout-grid">
                 <div class="card sim-card">
                     <h2>Gameweek Simulation</h2>
-                    <p style="margin-bottom:15px; color:#555;">Click below to simulate the next gameweek. This will lock your team, calculate points, perform auto-subs, deduct transfer hits, and generate AI opponent scores for the leagues.</p>
+                    <p style="margin-bottom:15px; color:#555;">Click below to simulate the next gameweek. This locks your team, calculates points, auto-subs, and generates AI opponent scores.</p>
                     <button class="action-btn sim-btn" onclick="simulateGameweek()">Simulate Gameweek</button>
-                    
                     <hr style="margin: 30px 0; border:0; border-top:1px solid #e2e8f0;">
                     <button class="action-btn cancel-btn" onclick="resetAllData()" style="width:100%;">Hard Reset Entire Game</button>
                 </div>
                 
                 <div class="card admin-card">
                     <h2>Manual Stat Override</h2>
-                    <p style="margin-bottom:15px; font-size:0.9rem; color:#555;">Input real-life FPL stats for a specific player to ensure they score exactly what they earned in real life during the next simulation.</p>
+                    <p style="margin-bottom:15px; font-size:0.9rem; color:#555;">Input real-life stats for a specific player to ensure they score exactly what they earned.</p>
                     <div class="admin-form">
                         <select id="admin-player-select"></select>
                         <input type="number" id="admin-mins" placeholder="Minutes Played (0-90)" min="0" max="90">
