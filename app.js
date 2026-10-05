@@ -39,7 +39,8 @@ let state = {
   positionFilter: 'ALL',   // 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'
   searchQuery: '',
   hasSeenWelcome: false,
-  currentGameweek: 1
+  currentGameweek: 1,
+  selectedForSwap: null    // Tracks player ID selected for bench substitution
 };
 
 // --- 3. STORAGE & STATE PERSISTENCE ---
@@ -104,7 +105,6 @@ function autoAssignXIAndBench() {
 
   const squadPlayers = state.squad.map(id => INITIAL_PLAYERS.find(p => p.id === id)).filter(Boolean);
 
-  // Auto assign starters by required positions
   const posOrder = ['GK', 'DEF', 'MID', 'FWD'];
   posOrder.forEach(pos => {
     const posPlayers = squadPlayers.filter(p => p.pos === pos);
@@ -119,7 +119,6 @@ function autoAssignXIAndBench() {
     });
   });
 
-  // Assign Captain and Vice Captain if missing
   if (state.startingXI.length > 0 && !state.captainId) {
     state.captainId = state.startingXI[0];
   }
@@ -128,7 +127,7 @@ function autoAssignXIAndBench() {
   }
 }
 
-// --- 4. VALIDATION & SQUAD ACTIONS ---
+// --- 4. VALIDATION, SQUAD & SWAP ACTIONS ---
 function getPlayerCountByPosition(pos) {
   return state.squad.filter(id => {
     const p = INITIAL_PLAYERS.find(item => item.id === id);
@@ -180,9 +179,57 @@ function removePlayerFromSquad(playerId) {
 
   if (state.captainId === playerId) state.captainId = state.startingXI[0] || null;
   if (state.viceCaptainId === playerId) state.viceCaptainId = state.startingXI[1] || null;
+  if (state.selectedForSwap === playerId) state.selectedForSwap = null;
 
   recalculateBank();
   saveState();
+  renderApp();
+}
+
+// BENCH SUBSTITUTION & SWAP SYSTEM
+function swapPlayers(player1Id, player2Id) {
+  const p1 = INITIAL_PLAYERS.find(p => p.id === player1Id);
+  const p2 = INITIAL_PLAYERS.find(p => p.id === player2Id);
+
+  if (!p1 || !p2) return;
+
+  const p1InXI = state.startingXI.includes(player1Id);
+  const p2InXI = state.startingXI.includes(player2Id);
+
+  if (p1InXI !== p2InXI) {
+    const starterId = p1InXI ? player1Id : player2Id;
+    const benchId = p1InXI ? player2Id : player1Id;
+
+    const starter = INITIAL_PLAYERS.find(p => p.id === starterId);
+    const benchPlayer = INITIAL_PLAYERS.find(p => p.id === benchId);
+
+    if ((starter.pos === 'GK' || benchPlayer.pos === 'GK') && starter.pos !== benchPlayer.pos) {
+      alert("Goalkeepers can only be swapped with another Goalkeeper.");
+      state.selectedForSwap = null;
+      renderApp();
+      return;
+    }
+
+    state.startingXI = state.startingXI.map(id => id === starterId ? benchId : id);
+    state.bench = state.bench.map(id => id === benchId ? starterId : id);
+  } else {
+    alert("Select one starting XI player and one bench player to make a substitution.");
+  }
+
+  state.selectedForSwap = null;
+  saveState();
+  renderApp();
+}
+
+function handlePlayerSelectForSwap(playerId) {
+  if (!state.selectedForSwap) {
+    state.selectedForSwap = playerId;
+  } else if (state.selectedForSwap === playerId) {
+    state.selectedForSwap = null;
+  } else {
+    swapPlayers(state.selectedForSwap, playerId);
+    return;
+  }
   renderApp();
 }
 
@@ -291,7 +338,6 @@ function renderPitchView() {
 
   let html = `<div class="pitch-container"><div class="pitch">`;
 
-  // Render Starting XI Pitch Rows
   positions.forEach(posGroup => {
     const startersInPos = state.startingXI
       .map(id => INITIAL_PLAYERS.find(p => p.id === id))
@@ -304,9 +350,10 @@ function renderPitchView() {
       if (player) {
         const isC = state.captainId === player.id;
         const isVC = state.viceCaptainId === player.id;
+        const isSelectedSwap = state.selectedForSwap === player.id;
 
         html += `
-          <div class="player-card filled">
+          <div class="player-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
             <button class="remove-btn" data-remove="${player.id}" title="Remove player">×</button>
             <div class="shirt-icon">${player.pos}</div>
             <div class="player-name">
@@ -344,15 +391,18 @@ function renderPitchView() {
       <h3>Substitutes Bench</h3>
       <div class="bench-row">
         ${benchPlayers.length === 0 ? '<p class="empty-bench">No substitute players selected yet.</p>' : ''}
-        ${benchPlayers.map(player => `
-          <div class="player-card bench-card">
-            <button class="remove-btn" data-remove="${player.id}">×</button>
-            <div class="shirt-icon bench-icon">${player.pos}</div>
-            <div class="player-name">${player.name}</div>
-            <div class="player-club">${player.club}</div>
-            <div class="player-price">Br ${player.price}M</div>
-          </div>
-        `).join('')}
+        ${benchPlayers.map(player => {
+          const isSelectedSwap = state.selectedForSwap === player.id;
+          return `
+            <div class="player-card bench-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
+              <button class="remove-btn" data-remove="${player.id}">×</button>
+              <div class="shirt-icon bench-icon">${player.pos}</div>
+              <div class="player-name">${player.name}</div>
+              <div class="player-club">${player.club}</div>
+              <div class="player-price">Br ${player.price}M</div>
+            </div>
+          `;
+        }).join('')}
       </div>
     </div>
   </div>`;
@@ -479,6 +529,7 @@ function renderRulesView() {
         <li><strong>Club Limit:</strong> Max 3 players from any single club (e.g., St. George, Ethiopia Bunna).</li>
         <li><strong>Captain (C):</strong> Earns 2x points for the Gameweek.</li>
         <li><strong>Vice-Captain (VC):</strong> Receives 2x points if your Captain does not play.</li>
+        <li><strong>Substitutions:</strong> Click a player on the pitch and a player on the bench to swap them.</li>
       </ul>
     </div>
   `;
@@ -538,6 +589,15 @@ function attachEventListeners() {
     slot.addEventListener('click', (e) => {
       const pos = e.currentTarget.dataset.pickPos;
       navigateToTransfersForPosition(pos);
+    });
+  });
+
+  // Card Click for Bench Substitution / Swapping
+  document.querySelectorAll('.player-card.filled').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.remove-btn') || e.target.closest('.btn-role')) return;
+      const playerId = parseInt(card.dataset.playerId, 10);
+      if (playerId) handlePlayerSelectForSwap(playerId);
     });
   });
 
