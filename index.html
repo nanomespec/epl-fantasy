@@ -21,7 +21,6 @@
     <nav class="fantasy-nav">
         <button class="tab-btn active" onclick="switchTab('squad')">My Team</button>
         <button class="tab-btn" onclick="switchTab('market')">Transfer Market</button>
-        <button class="tab-btn" onclick="switchTab('leagues')">Leagues</button>
     </nav>
 
     <!-- Main Container -->
@@ -29,31 +28,19 @@
         
         <!-- SQUAD VIEW (Pitch Layout) -->
         <section id="squad-section" class="view-section active">
-            <h2>Your Starting XI & Squad</h2>
+            <h2>Your Starting Squad & Pitch</h2>
             <div class="pitch-container">
-                <div class="pitch-row fwd-row">
-                    <!-- Forwards slots -->
-                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
-                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
-                    <div class="player-slot" data-pos="FWD">Empty FWD</div>
+                <div class="pitch-row fwd-row" id="pitch-FWD">
+                    <div class="player-slot placeholder">Empty FWD</div>
                 </div>
-                <div class="pitch-row mid-row">
-                    <!-- Midfielders slots -->
-                    <div class="player-slot" data-pos="MID">Empty MID</div>
-                    <div class="player-slot" data-pos="MID">Empty MID</div>
-                    <div class="player-slot" data-pos="MID">Empty MID</div>
-                    <div class="player-slot" data-pos="MID">Empty MID</div>
+                <div class="pitch-row mid-row" id="pitch-MID">
+                    <div class="player-slot placeholder">Empty MID</div>
                 </div>
-                <div class="pitch-row def-row">
-                    <!-- Defenders slots -->
-                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
-                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
-                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
-                    <div class="player-slot" data-pos="DEF">Empty DEF</div>
+                <div class="pitch-row def-row" id="pitch-DEF">
+                    <div class="player-slot placeholder">Empty DEF</div>
                 </div>
-                <div class="pitch-row gk-row">
-                    <!-- Goalkeeper slot -->
-                    <div class="player-slot" data-pos="GK">Empty GK</div>
+                <div class="pitch-row gk-row" id="pitch-GK">
+                    <div class="player-slot placeholder">Empty GK</div>
                 </div>
             </div>
         </section>
