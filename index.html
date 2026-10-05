@@ -5,156 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ethiopian Premier League Fantasy</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Essential inline styles to ensure the pitch and layout render correctly if your CSS is missing classes */
-        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .dashboard-header { display: flex; justify-content: space-between; background: #1a202c; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-        .stat { text-align: center; }
-        .stat span { display: block; font-size: 1.2rem; font-weight: bold; color: #48bb78; }
-        .main-container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .left-panel, .right-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .left-panel { flex: 2; min-width: 300px; }
-        .right-panel { flex: 1; min-width: 300px; }
-        .chips-container { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; }
-        .chip-btn { padding: 8px 12px; cursor: pointer; border: 1px solid #cbd5e0; border-radius: 4px; background: #edf2f7; font-weight: bold; }
-        .chip-btn.active { background: #ecc94b; color: #000; border-color: #d69e2e; }
-        .chip-btn.used { background: #e53e3e; color: white; cursor: not-allowed; border-color: #c53030; }
-        .pitch { background: #2f855a; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 15px; align-items: center; border: 2px solid #276749; }
-        .pitch-row { display: flex; gap: 15px; justify-content: center; width: 100%; min-height: 80px; }
-        .bench-container { background: #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 15px; display: flex; justify-content: center; gap: 15px; }
-        .player-slot { background: white; padding: 8px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); width: 110px; font-size: 0.85rem;}
-        .pitch-player-name { font-weight: bold; cursor: pointer; color: #2b6cb0; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        .pitch-player-meta { font-size: 0.75rem; color: #4a5568; margin-bottom: 5px; }
-        .card-actions { display: flex; justify-content: center; gap: 4px; }
-        .badge-btn { font-size: 0.7rem; padding: 3px 6px; cursor: pointer; border: 1px solid #cbd5e0; background: #f7fafc; border-radius: 3px; }
-        .badge-btn.active-c { background: #ecc94b; font-weight: bold; border-color: #d69e2e; }
-        .badge-btn.active-vc { background: #a0aec0; color: white; font-weight: bold; border-color: #718096; }
-        .swap-btn { font-size: 0.8rem; cursor: pointer; background: #e2e8f0; border: 1px solid #cbd5e0; border-radius: 3px; }
-        .quotas { display: flex; justify-content: space-around; margin-bottom: 15px; font-size: 0.9rem; font-weight: bold; color: #2d3748; background: #edf2f7; padding: 10px; border-radius: 6px;}
-        .admin-form { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .admin-form input, .admin-form select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; }
-        .action-btn { background: #3182ce; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .action-btn:hover { background: #2b6cb0; }
-        .sim-btn { background: #dd6b20; width: 100%; margin-top: 20px; font-size: 1.1rem; padding: 15px; }
-        .sim-btn:hover { background: #c05621; }
-        #formation-display { text-align: center; font-weight: bold; color: white; margin-bottom: 10px; }
-        hr { border: 0; height: 1px; background: #e2e8f0; margin: 20px 0; }
-    </style>
 </head>
 <body>
+    <header class="main-header">
+        <div class="logo">
+            <svg width="30" height="30" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="#00ff85" stroke="#37003c" stroke-width="5"/>
+                <text x="50" y="65" font-family="Arial" font-size="40" font-weight="bold" fill="#37003c" text-anchor="middle">FPL</text>
+            </svg>
+            <span>ETHIOPIAN FANTASY</span>
+        </div>
+        <nav class="top-nav">
+            <button class="nav-btn active" data-tab="pick-team" onclick="switchTab('pick-team')">Pick Team</button>
+            <button class="nav-btn" data-tab="transfers" onclick="switchTab('transfers')">Transfers</button>
+            <button class="nav-btn" data-tab="leagues" onclick="switchTab('leagues')">Leagues</button>
+            <button class="nav-btn" data-tab="admin" onclick="switchTab('admin')">Fixtures & Sim</button>
+        </nav>
+    </header>
 
-    <!-- Header Stats Dashboard -->
-    <div class="dashboard-header">
-        <div class="stat">Budget <div><span id="budget-val">100.0</span></div></div>
-        <div class="stat">Squad Value <div><span id="squad-val">0.0</span></div></div>
-        <div class="stat">Free Transfers <div><span id="transfers-val">1</span></div></div>
-        <div class="stat">Hit Cost <div><span id="hits-val">0</span></div></div>
-        <div class="stat">Total Points <div><span id="points-val">0</span></div></div>
+    <div class="status-bar">
+        <div class="status-item">Gameweek <span id="gw-counter">1</span></div>
+        <div class="status-item">Budget <span>£<span id="budget-val">100.0</span>m</span></div>
+        <div class="status-item">Total Points <span id="points-val">0</span></div>
+        <div class="status-item">Free Transfers <span id="transfers-val">1</span></div>
     </div>
 
-    <div class="main-container">
+    <main class="app-container">
         
-        <!-- Left Panel: Pitch and Squad Management -->
-        <div class="left-panel">
-            <h2>Your Squad</h2>
-            
-            <!-- Positional Quotas Tracker -->
-            <div class="quotas">
-                <div>GK: <span id="q-gk">0/2</span></div>
-                <div>DEF: <span id="q-def">0/5</span></div>
-                <div>MID: <span id="q-mid">0/5</span></div>
-                <div>FWD: <span id="q-fwd">0/3</span></div>
-            </div>
-
-            <!-- Chips Bar -->
-            <div class="chips-container">
-                <button id="chip-wildcard" class="chip-btn" onclick="toggleChip('wildcard')">Wildcard</button>
-                <button id="chip-freehit" class="chip-btn" onclick="toggleChip('freehit')">Free Hit</button>
-                <button id="chip-benchboost" class="chip-btn" onclick="toggleChip('benchboost')">Bench Boost</button>
-                <button id="chip-triplecaptain" class="chip-btn" onclick="toggleChip('triplecaptain')">Triple Captain</button>
-            </div>
-
-            <!-- Pitch Area -->
-            <div class="pitch">
-                <div id="formation-display">Current Formation: 0-0-0</div>
-                <div class="pitch-row" id="pitch-GK"></div>
-                <div class="pitch-row" id="pitch-DEF"></div>
-                <div class="pitch-row" id="pitch-MID"></div>
-                <div class="pitch-row" id="pitch-FWD"></div>
-            </div>
-
-            <!-- Bench Area -->
-            <div class="bench-container" id="bench-row"></div>
-
-            <button class="action-btn sim-btn" onclick="simulateGameweek()">SIMULATE GAMEWEEK (Apply Auto-Subs & Points)</button>
-        </div>
-
-        <!-- Right Panel: Market, Admin, and Leaderboard -->
-        <div class="right-panel">
-            
-            <!-- Transfer Market (Simplified for app.js rendering) -->
-            <h2>Transfer Market</h2>
-            <!-- Note: Your app.js renderMarket() function needs to inject elements into an element with id="market-list". -->
-            <div id="market-container">
-                <input type="text" id="market-search" placeholder="Search players..." onkeyup="filterMarket()" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
-                <select id="market-filter" onchange="filterMarket()" style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                    <option value="ALL">All Positions</option>
-                    <option value="GK">Goalkeepers</option>
-                    <option value="DEF">Defenders</option>
-                    <option value="MID">Midfielders</option>
-                    <option value="FWD">Forwards</option>
-                </select>
-                <div id="market-list" style="max-height: 300px; overflow-y: auto; background: #f7fafc; padding: 10px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                    <!-- Market items populated by app.js -->
+        <!-- TAB 1: PICK TEAM -->
+        <div id="tab-pick-team" class="tab-view active">
+            <div class="layout-grid">
+                <div class="pitch-section">
+                    <div class="chips-bar">
+                        <button id="chip-wildcard" class="chip-btn" onclick="toggleChip('wildcard')">Wildcard</button>
+                        <button id="chip-freehit" class="chip-btn" onclick="toggleChip('freehit')">Free Hit</button>
+                        <button id="chip-benchboost" class="chip-btn" onclick="toggleChip('benchboost')">Bench Boost</button>
+                        <button id="chip-triplecaptain" class="chip-btn" onclick="toggleChip('triplecaptain')">Triple Captain</button>
+                    </div>
+                    <div class="pitch-container">
+                        <div class="fpl-pitch" id="pick-pitch-xi"></div>
+                    </div>
+                    <div class="bench-container">
+                        <h3 style="margin-bottom:10px; color:#37003c;">Bench</h3>
+                        <div class="bench-row" id="pick-pitch-bench"></div>
+                    </div>
+                    <p class="help-text">Click a player to Swap, Captain, or Vice-Captain.</p>
+                </div>
+                
+                <div class="info-section">
+                    <div class="card info-card">
+                        <h3>Gameweek Info</h3>
+                        <p style="margin: 10px 0;">Latest GW Score: <strong id="last-gw-score" style="color:var(--fpl-purple); font-size:1.2rem;">0</strong> pts</p>
+                        <p id="formation-display" style="font-weight:bold; color:#666;">Formation: 0-0-0</p>
+                        <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
+                        <p style="font-size:0.85rem; color:#888;">Ensure exactly 11 players are on the pitch with a valid formation (Min: 3 DEF, 2 MID, 1 FWD) before simulating.</p>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <hr>
+        <!-- TAB 2: TRANSFERS -->
+        <div id="tab-transfers" class="tab-view">
+            <div class="layout-grid">
+                <div class="pitch-section">
+                    <div class="transfer-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div style="font-weight:bold;">Hits Cost: <strong id="transfer-hits-val" style="color:#e53e3e;">0</strong> pts</div>
+                        <button class="action-btn cancel-btn" onclick="resetTransfers()">Cancel Transfers</button>
+                    </div>
+                    <div class="pitch-container" style="opacity: 0.9;">
+                        <div class="fpl-pitch" id="transfer-pitch-xi"></div>
+                    </div>
+                    <div class="bench-container">
+                        <div class="bench-row" id="transfer-pitch-bench"></div>
+                    </div>
+                    <p class="help-text">Click a player on the pitch to Sell.</p>
+                </div>
 
-            <!-- Admin FPL Stat Injection -->
-            <h2>Admin Override (Real FPL Stats)</h2>
-            <p style="font-size: 0.85rem; color: #718096; margin-top: -10px;">Queue real-life match stats before simulating the gameweek.</p>
-            <div class="admin-form">
-                <select id="admin-player-select"></select>
-                <input type="number" id="admin-mins" placeholder="Minutes Played (0-90)" min="0" max="90">
-                <input type="number" id="admin-goals" placeholder="Goals Scored" min="0">
-                <input type="number" id="admin-assists" placeholder="Assists" min="0">
-                <input type="number" id="admin-yc" placeholder="Yellow Cards (0-2)" min="0" max="2">
-                <input type="number" id="admin-rc" placeholder="Red Cards (0-1)" min="0" max="1">
-                <select id="admin-cleansheet">
-                    <option value="0">Clean Sheet: No</option>
-                    <option value="1">Clean Sheet: Yes (Requires 60+ Mins)</option>
-                </select>
-                <button class="action-btn" onclick="applyAdminStats()">Queue Real Match Stats</button>
+                <div class="market-section">
+                    <div class="card market-card">
+                        <h3>Player Market</h3>
+                        <div class="market-filters">
+                            <input type="text" id="market-search" placeholder="Search..." onkeyup="renderMarket()">
+                            <select id="market-filter-pos" onchange="renderMarket()">
+                                <option value="ALL">All Pos</option>
+                                <option value="GK">Goalkeepers</option>
+                                <option value="DEF">Defenders</option>
+                                <option value="MID">Midfielders</option>
+                                <option value="FWD">Forwards</option>
+                            </select>
+                            <input type="number" id="market-max-price" placeholder="Max £" step="0.1" onchange="renderMarket()">
+                        </div>
+                        <div class="quotas-bar">
+                            <span id="q-gk">GK: 0/2</span>
+                            <span id="q-def">DEF: 0/5</span>
+                            <span id="q-mid">MID: 0/5</span>
+                            <span id="q-fwd">FWD: 0/3</span>
+                        </div>
+                        <div style="max-height: 500px; overflow-y: auto;">
+                            <table class="market-table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>£</th>
+                                        <th>Act</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="market-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <hr>
+        <!-- TAB 3: LEAGUES -->
+        <div id="tab-leagues" class="tab-view">
+            <div class="leagues-grid">
+                <div class="card league-card">
+                    <h3>Global Classic League</h3>
+                    <table class="league-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team & Manager</th>
+                                <th>GW</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classic-league-body"></tbody>
+                    </table>
+                </div>
 
-            <!-- Leaderboard (Simplified for app.js rendering) -->
-            <h2>Leaderboard</h2>
-            <div id="leaderboard-container">
-                <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #cbd5e0;">
-                            <th style="padding: 8px;">Rank</th>
-                            <th style="padding: 8px;">Team</th>
-                            <th style="padding: 8px;">GW</th>
-                            <th style="padding: 8px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-list">
-                        <!-- Leaderboard items populated by app.js -->
-                    </tbody>
-                </table>
+                <div class="card league-card">
+                    <h3>Head-to-Head Cup</h3>
+                    <table class="league-table h2h-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>W</th>
+                                <th>D</th>
+                                <th>L</th>
+                                <th>Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="h2h-league-body"></tbody>
+                    </table>
+                    
+                    <h4 style="margin-top:20px; border-bottom: 2px solid var(--fpl-green); padding-bottom:5px; color:var(--fpl-purple);">Latest H2H Results</h4>
+                    <div id="h2h-fixtures-list" class="h2h-fixtures">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <hr>
-            
-            <button class="action-btn" style="background: #e53e3e; width: 100%;" onclick="resetAllData()">Reset Entire Game</button>
+        <!-- TAB 4: ADMIN & SIM -->
+        <div id="tab-admin" class="tab-view">
+            <div class="layout-grid">
+                <div class="card sim-card">
+                    <h2>Gameweek Simulation</h2>
+                    <p style="margin-bottom:15px; color:#555;">Click below to simulate the next gameweek. This will lock your team, calculate points, perform auto-subs, deduct transfer hits, and generate AI opponent scores for the leagues.</p>
+                    <button class="action-btn sim-btn" onclick="simulateGameweek()">Simulate Gameweek</button>
+                    
+                    <hr style="margin: 30px 0; border:0; border-top:1px solid #e2e8f0;">
+                    <button class="action-btn cancel-btn" onclick="resetAllData()" style="width:100%;">Hard Reset Entire Game</button>
+                </div>
+                
+                <div class="card admin-card">
+                    <h2>Manual Stat Override</h2>
+                    <p style="margin-bottom:15px; font-size:0.9rem; color:#555;">Input real-life FPL stats for a specific player to ensure they score exactly what they earned in real life during the next simulation.</p>
+                    <div class="admin-form">
+                        <select id="admin-player-select"></select>
+                        <input type="number" id="admin-mins" placeholder="Minutes Played (0-90)" min="0" max="90">
+                        <input type="number" id="admin-goals" placeholder="Goals Scored" min="0">
+                        <input type="number" id="admin-assists" placeholder="Assists" min="0">
+                        <input type="number" id="admin-yc" placeholder="Yellow Cards" min="0" max="2">
+                        <input type="number" id="admin-rc" placeholder="Red Cards" min="0" max="1">
+                        <select id="admin-cleansheet">
+                            <option value="0">Clean Sheet: No</option>
+                            <option value="1">Clean Sheet: Yes (Min 60 mins)</option>
+                        </select>
+                        <button class="action-btn" onclick="applyAdminStats()">Queue Custom Stats</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Dynamic Context Modal -->
+    <div id="player-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-p-name">Player Name</h3>
+            <p id="modal-p-info" style="color:#666; font-size:0.9rem; margin-bottom:15px;">Pos | Team | Price</p>
+            <div class="modal-actions" id="modal-actions"></div>
+            <button class="action-btn cancel-btn" onclick="closeModal()" style="margin-top:10px;">Close</button>
         </div>
     </div>
 
-    <!-- Script connection -->
     <script src="app.js"></script>
 </body>
 </html>
