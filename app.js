@@ -1,5 +1,6 @@
 /* ==========================================================================
    ETHIOPIAN PREMIER LEAGUE FANTASY - COMPLETE & UNIFIED APP LOGIC
+   (With Strategic Chips, Transfer Limits, Transfer Cost Hits & Dynamic Economy)
    ========================================================================== */
 
 // --- 1. DATA CONSTANTS & INITIAL REGISTERED PLAYERS (16 PLAYERS) ---
@@ -26,6 +27,7 @@ const SQUAD_LIMITS = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const MAX_SQUAD_SIZE = 15;
 const INITIAL_BUDGET = 100.0;
 const MAX_PER_CLUB = 3;
+const HIT_PENALTY_PTS = 4;
 
 // --- 2. GLOBAL APP STATE ---
 let state = {
@@ -39,10 +41,15 @@ let state = {
   positionFilter: 'ALL',   // 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'
   searchQuery: '',
   hasSeenWelcome: false,
-  currentGameweek: 1,
+  currentGameweek: 1,      // GW1 allows unlimited free squad picking
   selectedForSwap: null,   // Tracks player ID selected for bench substitution
   activeChip: null,        // 'wildcard' | 'freeHit' | 'tripleCaptain' | 'benchBoost' | null
-  usedChips: []            // Array of used chip names e.g. ['wildcard']
+  usedChips: [],           // Array of used chip names e.g. ['wildcard']
+  freeTransfers: 1,        // Accumulated free transfers (rolling up to 5)
+  transfersMadeThisGW: 0,  // Number of transfers completed in active Gameweek
+  transferPenalty: 0,      // Calculated point deduction for extra transfers (-4 per hit)
+  purchasePrices: {},      // Maps playerId -> price paid when bought
+  savedFreeHitSquad: null  // Holds squad state to restore after Free Hit GW
 };
 
 // --- 3. STORAGE & STATE PERSISTENCE ---
@@ -52,11 +59,11 @@ function loadState() {
   const savedXI = localStorage.getItem('epl_fantasy_xi');
   const savedRoles = localStorage.getItem('epl_fantasy_roles');
   const savedChips = localStorage.getItem('epl_fantasy_chips');
+  const savedEconomy = localStorage.getItem('epl_fantasy_economy');
 
   if (savedSquad) {
     try {
       state.squad = JSON.parse(savedSquad);
-      recalculateBank();
     } catch (e) {
       state.squad = [];
     }
@@ -90,9 +97,23 @@ function loadState() {
     } catch (e) {}
   }
 
+  if (savedEconomy) {
+    try {
+      const parsed = JSON.parse(savedEconomy);
+      state.currentGameweek = parsed.currentGameweek || 1;
+      state.freeTransfers = parsed.freeTransfers !== undefined ? parsed.freeTransfers : 1;
+      state.transfersMadeThisGW = parsed.transfersMadeThisGW || 0;
+      state.purchasePrices = parsed.purchasePrices || {};
+      state.savedFreeHitSquad = parsed.savedFreeHitSquad || null;
+    } catch (e) {}
+  }
+
   if (savedWelcome) {
     state.hasSeenWelcome = JSON.parse(savedWelcome);
   }
+
+  recalculateBank();
+  updateTransferPenalty();
 }
 
 function saveState() {
@@ -101,14 +122,46 @@ function saveState() {
   localStorage.setItem('epl_fantasy_xi', JSON.stringify({ startingXI: state.startingXI, bench: state.bench }));
   localStorage.setItem('epl_fantasy_roles', JSON.stringify({ captainId: state.captainId, viceCaptainId: state.viceCaptainId }));
   localStorage.setItem('epl_fantasy_chips', JSON.stringify({ activeChip: state.activeChip, usedChips: state.usedChips }));
+  localStorage.setItem('epl_fantasy_economy', JSON.stringify({
+    currentGameweek: state.currentGameweek,
+    freeTransfers: state.freeTransfers,
+    transfersMadeThisGW: state.transfersMadeThisGW,
+    purchasePrices: state.purchasePrices,
+    savedFreeHitSquad: state.savedFreeHitSquad
+  }));
+}
+
+// --- DYNAMIC ECONOMY & SELLING PRICE CALCULATION ---
+function getSellingPrice(player) {
+  const buyPrice = state.purchasePrices[player.id] !== undefined ? state.purchasePrices[player.id] : player.price;
+  if (player.price > buyPrice) {
+    // 50% profit margin rounded down to nearest 0.1M
+    const profit = player.price - buyPrice;
+    const splitProfit = Math.floor((profit * 10) / 2) / 10;
+    return parseFloat((buyPrice + splitProfit).toFixed(1));
+  }
+  return player.price;
 }
 
 function recalculateBank() {
   const totalSpent = state.squad.reduce((sum, id) => {
-    const p = INITIAL_PLAYERS.find(item => item.id === id);
-    return sum + (p ? p.price : 0);
+    const buyPrice = state.purchasePrices[id] !== undefined 
+      ? state.purchasePrices[id] 
+      : (INITIAL_PLAYERS.find(p => p.id === id)?.price || 0);
+    return sum + buyPrice;
   }, 0);
   state.bank = parseFloat((INITIAL_BUDGET - totalSpent).toFixed(1));
+}
+
+function updateTransferPenalty() {
+  // GW1 is always unlimited free squad creation
+  if (state.currentGameweek === 1 || state.activeChip === 'wildcard' || state.activeChip === 'freeHit') {
+    state.transferPenalty = 0;
+    return;
+  }
+
+  const excessTransfers = Math.max(0, state.transfersMadeThisGW - state.freeTransfers);
+  state.transferPenalty = excessTransfers * HIT_PENALTY_PTS;
 }
 
 function autoAssignXIAndBench() {
@@ -177,23 +230,38 @@ function addPlayerToSquad(playerId) {
     return;
   }
 
+  // Only count towards transfer tally if squad was already fully formed (GW2+)
+  if (state.currentGameweek > 1 && state.squad.length === MAX_SQUAD_SIZE - 1) {
+    state.transfersMadeThisGW += 1;
+  }
+
   state.squad.push(playerId);
+  state.purchasePrices[playerId] = player.price;
+
   autoAssignXIAndBench();
   recalculateBank();
+  updateTransferPenalty();
   saveState();
   renderApp();
 }
 
 function removePlayerFromSquad(playerId) {
+  const player = INITIAL_PLAYERS.find(p => p.id === playerId);
+  if (player) {
+    const sellPrice = getSellingPrice(player);
+    state.bank = parseFloat((state.bank + sellPrice).toFixed(1));
+  }
+
   state.squad = state.squad.filter(id => id !== playerId);
   state.startingXI = state.startingXI.filter(id => id !== playerId);
   state.bench = state.bench.filter(id => id !== playerId);
+  delete state.purchasePrices[playerId];
 
   if (state.captainId === playerId) state.captainId = state.startingXI[0] || null;
   if (state.viceCaptainId === playerId) state.viceCaptainId = state.startingXI[1] || null;
   if (state.selectedForSwap === playerId) state.selectedForSwap = null;
 
-  recalculateBank();
+  updateTransferPenalty();
   saveState();
   renderApp();
 }
@@ -277,13 +345,74 @@ function playChip(chipName) {
   }
 
   if (state.activeChip === chipName) {
+    // Cancel active chip
+    if (chipName === 'freeHit' && state.savedFreeHitSquad) {
+      state.squad = [...state.savedFreeHitSquad];
+      state.savedFreeHitSquad = null;
+      autoAssignXIAndBench();
+    }
     state.activeChip = null;
   } else {
+    // Activate chip
+    if (chipName === 'freeHit') {
+      state.savedFreeHitSquad = [...state.squad];
+    }
     state.activeChip = chipName;
   }
 
+  updateTransferPenalty();
   saveState();
   renderApp();
+}
+
+// GAMEWEEK ADVANCE ENGINE
+function advanceGameweek() {
+  if (state.squad.length < MAX_SQUAD_SIZE) {
+    alert("Please build a full 15-player squad before advancing to the next Gameweek.");
+    return;
+  }
+
+  // Handle Free Hit reversal at GW deadline
+  if (state.activeChip === 'freeHit' && state.savedFreeHitSquad) {
+    state.squad = [...state.savedFreeHitSquad];
+    state.savedFreeHitSquad = null;
+    autoAssignXIAndBench();
+  }
+
+  // Mark active chip as used
+  if (state.activeChip) {
+    if (!state.usedChips.includes(state.activeChip)) {
+      state.usedChips.push(state.activeChip);
+    }
+    state.activeChip = null;
+  }
+
+  // Calculate remaining Free Transfers for next GW
+  if (state.currentGameweek > 1) {
+    const usedFTs = Math.min(state.freeTransfers, state.transfersMadeThisGW);
+    state.freeTransfers = Math.min(5, Math.max(1, state.freeTransfers - usedFTs + 1));
+  } else {
+    state.freeTransfers = 1; // GW2 starts with 1 Free Transfer
+  }
+
+  state.currentGameweek += 1;
+  state.transfersMadeThisGW = 0;
+  state.transferPenalty = 0;
+
+  // Simulate dynamic market price fluctuations (+0.1M / -0.1M)
+  INITIAL_PLAYERS.forEach(p => {
+    const rand = Math.random();
+    if (rand > 0.75) {
+      p.price = parseFloat((p.price + 0.1).toFixed(1));
+    } else if (rand < 0.20 && p.price > 4.0) {
+      p.price = parseFloat((p.price - 0.1).toFixed(1));
+    }
+  });
+
+  recalculateBank();
+  saveState();
+  renderApp();
+  alert(`Advanced to Gameweek ${state.currentGameweek}! Player prices have updated.`);
 }
 
 // --- 5. RENDER COMPONENTS ---
@@ -303,6 +432,7 @@ function renderWelcomeModal() {
           <ul>
             <li><strong>Budget:</strong> Br ${INITIAL_BUDGET} Million</li>
             <li><strong>Squad Size:</strong> 15 Players (2 GK, 5 DEF, 5 MID, 3 FWD)</li>
+            <li><strong>Unlimited GW1 Transfers:</strong> Pick freely for the opening Gameweek.</li>
             <li><strong>Club Limit:</strong> Max 3 players from any single club</li>
           </ul>
         </div>
@@ -319,17 +449,28 @@ function renderWelcomeModal() {
 
 // B. Header & Squad Overview Bar
 function renderHeaderStats() {
-  const squadVal = (INITIAL_BUDGET - state.bank).toFixed(1);
+  const squadVal = INITIAL_PLAYERS.reduce((sum, p) => {
+    return state.squad.includes(p.id) ? sum + p.price : sum;
+  }, 0).toFixed(1);
+
+  const ftLabel = state.currentGameweek === 1 ? 'Unlimited' : `${state.freeTransfers} FT`;
+  const hitLabel = state.transferPenalty > 0 ? `-${state.transferPenalty} pts` : '0 pts';
+
   return `
     <header class="app-header">
       <div class="brand">
         <h1>EPL Fantasy</h1>
         <span class="gw-badge">Gameweek ${state.currentGameweek}</span>
+        <button id="advance-gw-btn" class="btn-advance" title="Advance to Next Gameweek">Next GW ➔</button>
       </div>
       <div class="stats-bar">
         <div class="stat-box">
-          <span class="label">Players</span>
-          <span class="val ${state.squad.length === 15 ? 'complete' : ''}">${state.squad.length} / 15</span>
+          <span class="label">Transfers</span>
+          <span class="val">${ftLabel}</span>
+        </div>
+        <div class="stat-box">
+          <span class="label">Cost / Hits</span>
+          <span class="val ${state.transferPenalty > 0 ? 'penalty' : ''}">${hitLabel}</span>
         </div>
         <div class="stat-box">
           <span class="label">Bank</span>
@@ -474,8 +615,18 @@ function renderTransferMarket() {
     return matchesPos && matchesSearch;
   });
 
+  const isUnlimitedGW = state.currentGameweek === 1 || state.activeChip === 'wildcard' || state.activeChip === 'freeHit';
+
   return `
     <div class="transfer-gate">
+      <div class="transfer-status-banner" style="background:#f5f5f5; padding:10px 15px; border-radius:8px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>Transfers Status:</strong> 
+          ${isUnlimitedGW ? '<span style="color:#2e7d32; font-weight:bold;">Unlimited Free Transfers Active</span>' : `Transfers Made: ${state.transfersMadeThisGW} /${state.freeTransfers} Free`}
+        </div>
+        ${state.transferPenalty > 0 ? `<div style="color:#c62828; font-weight:bold;">Hit Cost: -${state.transferPenalty} pts</div>` : ''}
+      </div>
+
       <div class="filter-controls">
         <input 
           type="text" 
@@ -499,6 +650,7 @@ function renderTransferMarket() {
         ${filteredPlayers.map(player => {
           const isSelected = state.squad.includes(player.id);
           const check = canBuyPlayer(player);
+          const sellPrice = isSelected ? getSellingPrice(player) : player.price;
 
           return `
             <div class="market-item ${isSelected ? 'in-squad' : ''}">
@@ -511,7 +663,7 @@ function renderTransferMarket() {
               </div>
               <div class="item-action">
                 <span class="price">Br ${player.price}M</span>${isSelected ? `
-                  <button class="btn-sell" data-sell-id="${player.id}">Remove</button>
+                  <button class="btn-sell" data-sell-id="${player.id}">Sell (Br ${sellPrice}M)</button>
                 ` : `
                   <button 
                     class="btn-buy" 
@@ -531,7 +683,7 @@ function renderTransferMarket() {
 
 // F. Points & Scoreboard View
 function renderPointsView() {
-  let totalTeamPoints = 0;
+  let grossTeamPoints = 0;
   const isTripleCaptain = state.activeChip === 'tripleCaptain';
   const isBenchBoost = state.activeChip === 'benchBoost';
 
@@ -549,7 +701,7 @@ function renderPointsView() {
     }
 
     const calculatedPts = p.points * multiplier;
-    totalTeamPoints += calculatedPts;
+    grossTeamPoints += calculatedPts;
 
     return `
       <div class="score-row">
@@ -564,7 +716,7 @@ function renderPointsView() {
     benchPointsHtml = state.bench.map(id => {
       const p = INITIAL_PLAYERS.find(item => item.id === id);
       if (!p) return '';
-      totalTeamPoints += p.points;
+      grossTeamPoints += p.points;
       return `
         <div class="score-row bench-score" style="opacity: 0.85; background: #e8f5e9;">
           <span class="player-meta">${p.name} (Bench Boost) - <small>${p.club}</small></span>
@@ -574,12 +726,17 @@ function renderPointsView() {
     }).join('');
   }
 
+  const netTeamPoints = grossTeamPoints - state.transferPenalty;
+
   return `
     <div class="points-container">
       <div class="total-score-card">
         <h2>Gameweek ${state.currentGameweek} Score</h2>
-        <div class="big-score">${totalTeamPoints}</div>
-        <p>Total Points ${isBenchBoost ? '(Starting XI + Bench Boost)' : 'across Starting XI'}</p>
+        <div class="big-score">${netTeamPoints}</div>
+        <p>
+          Gross Score: ${grossTeamPoints} pts 
+          ${state.transferPenalty > 0 ? ` | Hits Deduction: <span style="color:#c62828;">-${state.transferPenalty} pts</span>` : ''}
+        </p>
         ${state.activeChip ? `<p style="color:#2e7d32; font-weight:bold;">Active Chip: ${state.activeChip.toUpperCase()}</p>` : ''}
       </div>
 
@@ -598,13 +755,15 @@ function renderRulesView() {
     <div class="rules-container">
       <h2>Ethiopian Fantasy Premier League Rules</h2>
       <ul class="rules-guide">
-        <li><strong>Squad Budget:</strong> You start with a maximum budget of Br 100.0M.</li>
-        <li><strong>Squad Size:</strong> Exactly 15 players (2 Goalkeepers, 5 Defenders, 5 Midfielders, 3 Forwards).</li>
+        <li><strong>Squad Budget:</strong> Maximum budget of Br 100.0M.</li>
+        <li><strong>Squad Size:</strong> 15 players (2 Goalkeepers, 5 Defenders, 5 Midfielders, 3 Forwards).</li>
+        <li><strong>Gameweek 1 Transfers:</strong> Unlimited free transfers before Gameweek 1 lock.</li>
+        <li><strong>Weekly Free Transfers (GW2+):</strong> 1 Free Transfer per Gameweek (rolls over up to 5 max if unused).</li>
+        <li><strong>Extra Transfer Cost ("Hits"):</strong> Additional transfers cost -4 points each from your overall Gameweek score.</li>
+        <li><strong>Dynamic Sell Value:</strong> 50% profit margin retained on players sold after price rises.</li>
         <li><strong>Club Limit:</strong> Max 3 players from any single club (e.g., St. George, Ethiopia Bunna).</li>
-        <li><strong>Captain (C):</strong> Earns 2x points for the Gameweek.</li>
-        <li><strong>Vice-Captain (VC):</strong> Receives 2x points if your Captain does not play.</li>
-        <li><strong>Substitutions:</strong> Click a player on the pitch and a player on the bench to swap them.</li>
-        <li><strong>Strategic Chips:</strong> Activate Wildcard, Free Hit, Triple Captain (3x Captain points), or Bench Boost (adds bench score).</li>
+        <li><strong>Captain (C) & Vice (VC):</strong> Captain earns 2x points (or 3x with Triple Captain).</li>
+        <li><strong>Strategic Chips:</strong> Wildcard, Free Hit, Triple Captain, Bench Boost.</li>
       </ul>
     </div>
   `;
@@ -658,6 +817,14 @@ function attachEventListeners() {
       renderApp();
     });
   });
+
+  // Advance Gameweek Button
+  const advanceBtn = document.getElementById('advance-gw-btn');
+  if (advanceBtn) {
+    advanceBtn.addEventListener('click', () => {
+      advanceGameweek();
+    });
+  }
 
   // Pick Slot (+ Button) Direct Routing
   document.querySelectorAll('[data-pick-pos]').forEach(slot => {
