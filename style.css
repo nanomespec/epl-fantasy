@@ -1,147 +1,184 @@
-// Current Ethiopian Premier League Player Dataset & Market
-const players = [
-    // Saint George SC
-    { id: 1, name: "Chernet Gugsa", team: "Saint George SC", pos: "MID", price: 8.5, points: 0 },
-    { id: 2, name: "Ramkel Lok", team: "Saint George SC", pos: "FWD", price: 9.0, points: 0 },
-    { id: 3, name: "Lealem Birhanu", team: "Saint George SC", pos: "GK", price: 5.5, points: 0 },
-
-    // Ethiopian Coffee SC (Bunna)
-    { id: 4, name: "Abubeker Nasir", team: "Ethiopian Coffee SC", pos: "FWD", price: 9.5, points: 0 },
-    { id: 5, name: "Wogene Gezahegn", team: "Ethiopian Coffee SC", pos: "MID", price: 7.5, points: 0 },
-    { id: 6, name: "Aschalew Tamene", team: "Ethiopian Coffee SC", pos: "DEF", price: 6.5, points: 0 },
-
-    // Sidama Bunna
-    { id: 7, name: "Yidnekachew Ali", team: "Sidama Bunna", pos: "GK", price: 5.0, points: 0 },
-    { id: 8, name: "Safee Assefa", team: "Sidama Bunna", pos: "FWD", price: 8.0, points: 0 },
-
-    // Fasil Kenema
-    { id: 9, name: "Surafel Dagnachew", team: "Fasil Kenema", pos: "MID", price: 9.0, points: 0 },
-    { id: 10, name: "Oumed Oukri", team: "Fasil Kenema", pos: "FWD", price: 8.0, points: 0 },
-
-    // Defense Force SC (Mekelakeya)
-    { id: 11, name: "Firew Solomon", team: "Defense Force SC", pos: "DEF", price: 6.0, points: 0 },
-    { id: 12, name: "Mintesinot Allo", team: "Defense Force SC", pos: "GK", price: 5.5, points: 0 },
-
-    // Bahir Dar Kenema
-    { id: 13, name: "Fereb Zewdu", team: "Bahir Dar Kenema", pos: "MID", price: 7.0, points: 0 },
-    { id: 14, name: "Ali Sulieman", team: "Bahir Dar Kenema", pos: "FWD", price: 8.5, points: 0 }
-];
-
-// User Squad State
-let userSquad = {
-    players: [],
-    budget: 100.0,
-    totalPoints: 0,
-    maxPerTeam: 3
-};
-
-// Initialize App on Load
-document.addEventListener("DOMContentLoaded", () => {
-    renderMarket(players);
-    setupEventListeners();
-});
-
-// Switch between tabs ("squad", "market", "leagues")
-function switchTab(tabId) {
-    document.querySelectorAll(".view-section").forEach(sec => {
-        sec.style.display = "none";
-        sec.classList.remove("active");
-    });
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
-
-    const targetSection = document.getElementById(`${tabId}-section`);
-    if (targetSection) {
-        targetSection.style.display = "block";
-        targetSection.classList.add("active");
-    }
-
-    event.currentTarget.classList.add("active");
+:root {
+    --primary-color: #023e8a;
+    --accent-color: #00b4d8;
+    --pitch-green: #2d6a4f;
+    --bg-dark: #121212;
+    --card-bg: #1e1e1e;
+    --text-light: #f8f9fa;
 }
 
-// Render Player Market Table
-dataToRender => {
-    const marketBody = document.getElementById("player-market-body");
-    marketBody.innerHTML = "";
-
-    dataToRender.forEach(player => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td><strong>${player.name}</strong></td>
-            <td>${player.team}</td>
-            <td><span class="badge ${player.pos}">${player.pos}</span></td>
-            <td>${player.price.toFixed(1)}M ETB</td>
-            <td><button class="add-btn" onclick="addPlayerToSquad(${player.id})">Add</button></td>
-        `;
-        marketBody.appendChild(row);
-    });
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
 }
 
-// Add Player Logic & Validation
-function addPlayerToSquad(playerId) {
-    const playerToAdd = players.find(p => p.id === playerId);
-    if (!playerToAdd) return;
-
-    // Check budget
-    if (userSquad.budget - playerToAdd.price < 0) {
-        alert("Not enough budget to sign this player!");
-        return;
-    }
-
-    // Check max squad capacity (15 players)
-    if (userSquad.players.length >= 15) {
-        alert("Your squad is already full (15/15 players)! Sub out a player first.");
-        return;
-    }
-
-    // Check max 3 players per club limit
-    const clubCount = userSquad.players.filter(p => p.team === playerToAdd.team).length;
-    if (clubCount >= userSquad.maxPerTeam) {
-        alert(`Rule violation: You can have a maximum of ${userSquad.maxPerTeam} players from ${playerToAdd.team}!`);
-        return;
-    }
-
-    // Check duplicate selection
-    if (userSquad.players.some(p => p.id === playerToAdd.id)) {
-        alert("Player is already in your squad!");
-        return;
-    }
-
-    // Add to squad and deduct budget
-    userSquad.players.push(playerToAdd);
-    userSquad.budget -= playerToAdd.price;
-    userSquad.totalPoints += playerToAdd.points;
-
-    updateStatsUI();
-    alert(`Successfully signed ${playerToAdd.name}!`);
+/* Header */
+.fantasy-header {
+    background-color: var(--primary-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-// Update Top Bar UI Stats
-function updateStatsUI() {
-    document.getElementById("budget-val").innerText = userSquad.budget.toFixed(1);
-    document.getElementById("points-val").innerText = userSquad.totalPoints;
+.logo {
+    font-size: 1.25rem;
+    font-weight: bold;
 }
 
-// Search and Position Filtering
-function setupEventListeners() {
-    const searchBar = document.getElementById("search-bar");
-    const posFilter = document.getElementById("pos-filter");
-
-    const filterHandler = () => {
-        const query = searchBar.value.toLowerCase();
-        const selectedPos = posFilter.value;
-
-        const filtered = players.filter(p => {
-            const matchesQuery = p.name.toLowerCase().includes(query) || p.team.toLowerCase().includes(query);
-            const matchesPos = selectedPos === "ALL" || p.pos === selectedPos;
-            return matchesQuery && matchesPos;
-        });
-
-        renderMarket(filtered);
-    };
-
-    searchBar.addEventListener("input", filterHandler);
-    posFilter.addEventListener("change", filterHandler);
+.user-stats {
+    display: flex;
+    gap: 1.5rem;
 }
+
+.stat-box {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Navigation Tabs */
+.fantasy-nav {
+    display: flex;
+    background-color: #1f1f1f;
+    border-bottom: 1px solid #333;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.tab-btn:hover, .tab-btn.active {
+    background-color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Main Container */
+.container {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Pitch Layout */
+.pitch-container {
+    background-color: var(--pitch-green);
+    border: 3px solid #fff;
+    border-radius: 8px;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-height: 450px;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+}
+
+.pitch-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.player-slot {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 80px;
+}
+
+.player-slot.placeholder {
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.pitch-player-name {
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.pitch-player-price {
+    font-size: 0.75rem;
+    color: var(--accent-color);
+}
+
+/* Market Table */
+.market-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.market-controls input, .market-controls select {
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border: 1px solid #444;
+    color: var(--text-light);
+    border-radius: 4px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.market-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--card-bg);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.market-table th, .market-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #2c2c2c;
+}
+
+.market-table th {
+    background-color: #252525;
+}
+
+.add-btn {
+    background-color: var(--accent-color);
+    color: #000;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    opacity: 0.9;
+}
+
+.badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.badge.GK { background: #e63946; color: white; }
+.badge.DEF { background: #457b9d; color: white; }
+.badge.MID { background: #2a9d8f; color: white; }
+.badge.FWD { background: #e76f51; color: white; }
