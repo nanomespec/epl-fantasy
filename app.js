@@ -17,7 +17,7 @@ const INITIAL_PLAYERS = [
     { id: 11, name: "Canaan Markneh", pos: "MID", club: "Defense Force", price: 5.5, score: 0 },
     { id: 12, name: "Biniyam Fikre", pos: "MID", club: "Sidama Bunna", price: 5.0, score: 0 },
     { id: 13, name: "Getaneh Kebede", pos: "FWD", club: "Wolkite", price: 8.0, score: 0 },
-    { id: 14, name: "Abel Yalew", pos: "FWD", club: "St. George", price: 7.5, score: 0 },
+    { id: 14, name: "Abel Yalew", pos: "FWD", club: "mechal", price: 7.5, score: 0 },
     { id: 15, name: "Dawa Hotessa", pos: "FWD", club: "Adama City", price: 6.5, score: 0 },
     { id: 16, name: "Chernet Gugsa", pos: "FWD", club: "Bahir Dar", price: 6.0, score: 0 }
 ];
