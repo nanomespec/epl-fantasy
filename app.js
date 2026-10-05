@@ -40,7 +40,9 @@ let state = {
   searchQuery: '',
   hasSeenWelcome: false,
   currentGameweek: 1,
-  selectedForSwap: null    // Tracks player ID selected for bench substitution
+  selectedForSwap: null,   // Tracks player ID selected for bench substitution
+  activeChip: null,        // 'wildcard' | 'freeHit' | 'tripleCaptain' | 'benchBoost' | null
+  usedChips: []            // Array of used chip names e.g. ['wildcard']
 };
 
 // --- 3. STORAGE & STATE PERSISTENCE ---
@@ -49,6 +51,7 @@ function loadState() {
   const savedWelcome = localStorage.getItem('epl_fantasy_welcome');
   const savedXI = localStorage.getItem('epl_fantasy_xi');
   const savedRoles = localStorage.getItem('epl_fantasy_roles');
+  const savedChips = localStorage.getItem('epl_fantasy_chips');
 
   if (savedSquad) {
     try {
@@ -79,6 +82,14 @@ function loadState() {
     } catch (e) {}
   }
 
+  if (savedChips) {
+    try {
+      const parsed = JSON.parse(savedChips);
+      state.activeChip = parsed.activeChip || null;
+      state.usedChips = parsed.usedChips || [];
+    } catch (e) {}
+  }
+
   if (savedWelcome) {
     state.hasSeenWelcome = JSON.parse(savedWelcome);
   }
@@ -89,6 +100,7 @@ function saveState() {
   localStorage.setItem('epl_fantasy_welcome', JSON.stringify(state.hasSeenWelcome));
   localStorage.setItem('epl_fantasy_xi', JSON.stringify({ startingXI: state.startingXI, bench: state.bench }));
   localStorage.setItem('epl_fantasy_roles', JSON.stringify({ captainId: state.captainId, viceCaptainId: state.viceCaptainId }));
+  localStorage.setItem('epl_fantasy_chips', JSON.stringify({ activeChip: state.activeChip, usedChips: state.usedChips }));
 }
 
 function recalculateBank() {
@@ -257,6 +269,23 @@ function setViceCaptain(playerId) {
   renderApp();
 }
 
+// STRATEGIC CHIPS ACTIVATION
+function playChip(chipName) {
+  if (state.usedChips.includes(chipName)) {
+    alert(`${chipName} has already been used this season!`);
+    return;
+  }
+
+  if (state.activeChip === chipName) {
+    state.activeChip = null;
+  } else {
+    state.activeChip = chipName;
+  }
+
+  saveState();
+  renderApp();
+}
+
 // --- 5. RENDER COMPONENTS ---
 
 // A. Welcome Onboarding Modal
@@ -329,6 +358,32 @@ function renderNavigation() {
 
 // D. Pitch & Squad View (Pick Team)
 function renderPitchView() {
+  const chips = [
+    { key: 'wildcard', label: 'Wildcard' },
+    { key: 'freeHit', label: 'Free Hit' },
+    { key: 'tripleCaptain', label: 'Triple Captain' },
+    { key: 'benchBoost', label: 'Bench Boost' }
+  ];
+
+  let chipsHtml = `
+    <div class="chips-bar" style="display:flex; gap:10px; justify-content:center; margin-bottom:15px; flex-wrap:wrap;">
+      ${chips.map(chip => {
+        const isUsed = state.usedChips.includes(chip.key);
+        const isActive = state.activeChip === chip.key;
+        return `
+          <button 
+            class="chip-btn ${isActive ? 'active' : ''}" 
+            data-chip="${chip.key}" 
+            ${isUsed ? 'disabled' : ''}
+            style="padding: 8px 14px; border-radius: 20px; border: 1px solid #ccc; background: ${isActive ? '#2e7d32' : isUsed ? '#ccc' : '#fff'}; color: ${isActive ? '#fff' : '#000'}; cursor: ${isUsed ? 'not-allowed' : 'pointer'}; font-weight: bold;"
+          >
+            ${chip.label}${isUsed ? '(Used)' : isActive ? 'ACTIVE' : ''}
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+
   const positions = [
     { key: 'GK', name: 'Goalkeeper', req: 1 },
     { key: 'DEF', name: 'Defenders', req: 4 },
@@ -336,7 +391,7 @@ function renderPitchView() {
     { key: 'FWD', name: 'Forwards', req: 2 }
   ];
 
-  let html = `<div class="pitch-container"><div class="pitch">`;
+  let html = `${chipsHtml}<div class="pitch-container"><div class="pitch">`;
 
   positions.forEach(posGroup => {
     const startersInPos = state.startingXI
@@ -477,6 +532,8 @@ function renderTransferMarket() {
 // F. Points & Scoreboard View
 function renderPointsView() {
   let totalTeamPoints = 0;
+  const isTripleCaptain = state.activeChip === 'tripleCaptain';
+  const isBenchBoost = state.activeChip === 'benchBoost';
 
   const pointsListHtml = state.startingXI.map(id => {
     const p = INITIAL_PLAYERS.find(item => item.id === id);
@@ -485,8 +542,8 @@ function renderPointsView() {
     let multiplier = 1;
     let badge = '';
     if (state.captainId === p.id) {
-      multiplier = 2;
-      badge = ' (C)';
+      multiplier = isTripleCaptain ? 3 : 2;
+      badge = isTripleCaptain ? ' (TC)' : ' (C)';
     } else if (state.viceCaptainId === p.id) {
       badge = ' (VC)';
     }
@@ -497,22 +554,39 @@ function renderPointsView() {
     return `
       <div class="score-row">
         <span class="player-meta">${p.name}${badge} - <small>${p.club}</small></span>
-        <span class="player-score">${calculatedPts} pts ${multiplier > 1 ? '(2x)' : ''}</span>
+        <span class="player-score">${calculatedPts} pts ${multiplier > 1 ? `(${multiplier}x)` : ''}</span>
       </div>
     `;
   }).join('');
+
+  let benchPointsHtml = '';
+  if (isBenchBoost) {
+    benchPointsHtml = state.bench.map(id => {
+      const p = INITIAL_PLAYERS.find(item => item.id === id);
+      if (!p) return '';
+      totalTeamPoints += p.points;
+      return `
+        <div class="score-row bench-score" style="opacity: 0.85; background: #e8f5e9;">
+          <span class="player-meta">${p.name} (Bench Boost) - <small>${p.club}</small></span>
+          <span class="player-score">${p.points} pts</span>
+        </div>
+      `;
+    }).join('');
+  }
 
   return `
     <div class="points-container">
       <div class="total-score-card">
         <h2>Gameweek ${state.currentGameweek} Score</h2>
         <div class="big-score">${totalTeamPoints}</div>
-        <p>Total Points across Starting XI</p>
+        <p>Total Points ${isBenchBoost ? '(Starting XI + Bench Boost)' : 'across Starting XI'}</p>
+        ${state.activeChip ? `<p style="color:#2e7d32; font-weight:bold;">Active Chip: ${state.activeChip.toUpperCase()}</p>` : ''}
       </div>
 
       <div class="breakdown-card">
         <h3>Player Points Breakdown</h3>
         ${pointsListHtml || '<p>Select your squad to calculate Gameweek points.</p>'}
+        ${benchPointsHtml}
       </div>
     </div>
   `;
@@ -530,6 +604,7 @@ function renderRulesView() {
         <li><strong>Captain (C):</strong> Earns 2x points for the Gameweek.</li>
         <li><strong>Vice-Captain (VC):</strong> Receives 2x points if your Captain does not play.</li>
         <li><strong>Substitutions:</strong> Click a player on the pitch and a player on the bench to swap them.</li>
+        <li><strong>Strategic Chips:</strong> Activate Wildcard, Free Hit, Triple Captain (3x Captain points), or Bench Boost (adds bench score).</li>
       </ul>
     </div>
   `;
@@ -664,6 +739,14 @@ function attachEventListeners() {
     btn.addEventListener('click', (e) => {
       const id = parseInt(e.currentTarget.dataset.sellId, 10);
       removePlayerFromSquad(id);
+    });
+  });
+
+  // Chip Activation Event Listener
+  document.querySelectorAll('[data-chip]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const chipName = e.currentTarget.dataset.chip;
+      playChip(chipName);
     });
   });
 }
