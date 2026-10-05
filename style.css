@@ -7,6 +7,9 @@
     --card-bg: #1e1e1e;
     --text-light: #f8f9fa;
     --gold: #ffb703;
+    --fdr-easy: #2a9d8f;
+    --fdr-med: #e9c46a;
+    --fdr-hard: #e76f51;
 }
 
 body {
@@ -29,316 +32,108 @@ body {
     gap: 1rem;
 }
 
-.logo {
-    font-size: 1.25rem;
-    font-weight: bold;
-}
-
-.user-stats {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
+.logo { font-size: 1.25rem; font-weight: bold; }
+.user-stats { display: flex; gap: 0.8rem; flex-wrap: wrap; }
 .stat-box {
     background: rgba(0, 0, 0, 0.3);
     padding: 0.4rem 0.8rem;
     border-radius: 4px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Navigation Tabs */
-.fantasy-nav {
-    display: flex;
-    background-color: #1f1f1f;
-    border-bottom: 1px solid #333;
-}
-
+.fantasy-nav { display: flex; background-color: #1f1f1f; border-bottom: 1px solid #333; }
 .tab-btn {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--text-light);
-    padding: 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
+    flex: 1; background: none; border: none; color: var(--text-light);
+    padding: 1rem; font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
 }
-
-.tab-btn:hover, .tab-btn.active {
-    background-color: var(--primary-color);
-    font-weight: bold;
-}
+.tab-btn:hover, .tab-btn.active { background-color: var(--primary-color); font-weight: bold; }
 
 /* Main Container */
-.container {
-    padding: 1.5rem;
-    max-width: 1050px;
-    margin: 0 auto;
-}
+.container { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.formation-text { margin: 0.2rem 0 0 0; font-size: 0.85rem; color: var(--accent-color); }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
+.action-btn { padding: 0.6rem 1.2rem; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+.sim-btn { background-color: var(--gold); color: #000; }
+.sim-btn:hover { opacity: 0.9; }
 
-.action-btn {
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: opacity 0.2s;
+/* Quota & Chips Bars */
+.quota-bar {
+    background: #252525; padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.85rem;
+    margin-bottom: 1rem; border: 1px solid #333;
 }
-
-.sim-btn {
-    background-color: var(--gold);
-    color: #000;
-}
-
-.sim-btn:hover {
-    opacity: 0.9;
-}
-
-/* Chips Bar */
 .chips-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    background: var(--card-bg);
-    padding: 0.8rem 1.2rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    border: 1px solid #2a2a2a;
+    display: flex; align-items: center; gap: 0.8rem; background: var(--card-bg);
+    padding: 0.8rem 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; border: 1px solid #2a2a2a;
 }
-
 .chip-btn {
-    background: #2a2a2a;
-    color: var(--text-light);
-    border: 1px solid #444;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    cursor: pointer;
+    background: #2a2a2a; color: var(--text-light); border: 1px solid #444;
+    padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; cursor: pointer;
 }
-
-.chip-btn.active {
-    background: var(--accent-color);
-    color: #000;
-    font-weight: bold;
-    border-color: var(--accent-color);
-}
-
-.chip-btn.used {
-    opacity: 0.4;
-    cursor: not-allowed;
-    text-decoration: line-through;
-}
+.chip-btn.active { background: var(--accent-color); color: #000; font-weight: bold; border-color: var(--accent-color); }
+.chip-btn.used { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
 
 /* Pitch Layout */
 .pitch-container {
     background: linear-gradient(180deg, var(--pitch-green) 0%, var(--pitch-dark) 100%);
-    border: 3px solid #fff;
-    border-radius: 8px;
-    padding: 2.2rem 1rem 1.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    min-height: 480px;
-    justify-content: space-around;
-    align-items: center;
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
-    position: relative;
+    border: 3px solid #fff; border-radius: 8px; padding: 2.2rem 1rem 1.5rem 1rem;
+    display: flex; flex-direction: column; gap: 1.5rem; min-height: 480px;
+    justify-content: space-around; align-items: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); position: relative;
 }
-
-.pitch-title {
-    position: absolute;
-    top: 10px;
-    left: 15px;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: bold;
-}
-
-.pitch-row {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    width: 100%;
-    flex-wrap: wrap;
-}
+.pitch-title { position: absolute; top: 10px; left: 15px; font-size: 0.75rem; letter-spacing: 1px; color: rgba(255, 255, 255, 0.6); font-weight: bold; }
+.pitch-row { display: flex; gap: 1rem; justify-content: center; width: 100%; flex-wrap: wrap; }
 
 /* Bench Layout */
-.bench-container {
-    background-color: var(--card-bg);
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    margin-top: 1.5rem;
-    border: 1px solid #2c2c2c;
-}
-
-.bench-container h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #aaa;
-}
-
-.bench-row {
-    display: flex;
-    gap: 1rem;
-    justify-content: space-around;
-    flex-wrap: wrap;
-}
+.bench-container { background-color: var(--card-bg); border-radius: 8px; padding: 1rem 1.5rem; margin-top: 1.5rem; border: 1px solid #2c2c2c; }
+.bench-container h3 { margin-top: 0; margin-bottom: 1rem; font-size: 1rem; color: #aaa; }
+.bench-row { display: flex; gap: 1rem; justify-content: space-around; flex-wrap: wrap; }
 
 /* Player Cards */
 .player-slot {
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    padding: 0.5rem 0.6rem;
-    font-size: 0.8rem;
-    text-align: center;
-    min-width: 95px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    position: relative;
+    background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px; padding: 0.5rem 0.6rem; font-size: 0.8rem; text-align: center;
+    min-width: 95px; display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
 }
-
-.player-slot.placeholder {
-    border: 1px dashed rgba(255, 255, 255, 0.3);
-    background: rgba(0, 0, 0, 0.3);
-    color: rgba(255, 255, 255, 0.5);
-    justify-content: center;
-    min-height: 70px;
-}
-
-.pitch-player-name {
-    font-weight: bold;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90px;
-}
-
-.pitch-player-meta {
-    font-size: 0.72rem;
-    color: var(--accent-color);
-}
-
-.card-actions {
-    display: flex;
-    gap: 0.25rem;
-    margin-top: 0.2rem;
-}
-
-.badge-btn {
-    border: none;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    padding: 0.15rem 0.35rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: #333;
-    color: #fff;
-}
-
-.badge-btn.active-c {
-    background: var(--gold);
-    color: #000;
-}
-
-.badge-btn.active-vc {
-    background: #e63946;
-    color: #fff;
-}
-
-.swap-btn {
-    background: var(--primary-color);
-    color: #fff;
-    border: none;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    cursor: pointer;
-    padding: 0.15rem 0.35rem;
-}
-
-.remove-btn {
-    background: #d90429;
-    color: #fff;
-    border: none;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    cursor: pointer;
-    padding: 0.15rem 0.35rem;
-}
+.player-slot.placeholder { border: 1px dashed rgba(255, 255, 255, 0.3); background: rgba(0, 0, 0, 0.3); color: rgba(255, 255, 255, 0.5); justify-content: center; min-height: 70px; }
+.pitch-player-name { font-weight: bold; font-size: 0.85rem; cursor: pointer; text-decoration: underline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+.pitch-player-meta { font-size: 0.72rem; color: var(--accent-color); }
+.card-actions { display: flex; gap: 0.25rem; margin-top: 0.2rem; }
+.badge-btn { border: none; border-radius: 3px; font-size: 0.65rem; padding: 0.15rem 0.35rem; font-weight: bold; cursor: pointer; background: #333; color: #fff; }
+.badge-btn.active-c { background: var(--gold); color: #000; }
+.badge-btn.active-vc { background: #e63946; color: #fff; }
+.swap-btn { background: var(--primary-color); color: #fff; border: none; border-radius: 3px; font-size: 0.65rem; cursor: pointer; padding: 0.15rem 0.35rem; }
+.remove-btn { background: #d90429; color: #fff; border: none; border-radius: 3px; font-size: 0.65rem; cursor: pointer; padding: 0.15rem 0.35rem; }
 
 /* Market Table & Controls */
-.market-controls {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.market-controls { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.market-controls input, .market-controls select, .admin-form input, .admin-form select {
+    padding: 0.5rem; background: var(--card-bg); border: 1px solid #444; color: var(--text-light); border-radius: 4px;
 }
+.table-responsive { overflow-x: auto; }
+.market-table { width: 100%; border-collapse: collapse; background-color: var(--card-bg); border-radius: 6px; overflow: hidden; }
+.market-table th, .market-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #2c2c2c; }
+.market-table th { background-color: #252525; }
+.add-btn { background-color: var(--accent-color); color: #000; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-.market-controls input, .market-controls select {
-    padding: 0.5rem;
-    background: var(--card-bg);
-    border: 1px solid #444;
-    color: var(--text-light);
-    border-radius: 4px;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-.market-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: var(--card-bg);
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.market-table th, .market-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #2c2c2c;
-}
-
-.market-table th {
-    background-color: #252525;
-}
-
-.add-btn {
-    background-color: var(--accent-color);
-    color: #000;
-    border: none;
-    padding: 0.3rem 0.8rem;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.add-btn:hover {
-    opacity: 0.9;
-}
-
-.badge {
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
+.badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
 .badge.GK { background: #e63946; color: white; }
 .badge.DEF { background: #457b9d; color: white; }
 .badge.MID { background: #2a9d8f; color: white; }
 .badge.FWD { background: #e76f51; color: white; }
+
+/* Fixtures & FDR Grid */
+.fixtures-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.fixture-card { background: var(--card-bg); padding: 1rem; border-radius: 6px; border: 1px solid #2a2a2a; }
+.fdr-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #000; }
+.fdr-1, .fdr-2 { background: var(--fdr-easy); color: #fff; }
+.fdr-3 { background: var(--fdr-med); }
+.fdr-4, .fdr-5 { background: var(--fdr-hard); color: #fff; }
+
+/* Modal Backdrop & Card */
+.modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal-card { background: var(--card-bg); padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; position: relative; border: 1px solid #444; }
+.modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; }
+.admin-card { background: var(--card-bg); padding: 1.5rem; border-radius: 8px; border: 1px solid #333; }
+.admin-form { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
