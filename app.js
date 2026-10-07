@@ -1,9 +1,8 @@
 /* ==========================================================================
    ETHIOPIAN PREMIER LEAGUE FANTASY - COMPLETE & UNIFIED APP LOGIC
-   (With Strategic Chips, Transfer Limits, Transfer Cost Hits & Dynamic Economy)
+   (Fixed chip UI bug + HTML escaping for safer templating)
    ========================================================================== */
 
-// --- 1. DATA CONSTANTS & INITIAL REGISTERED PLAYERS (16 PLAYERS) ---
 const INITIAL_PLAYERS = [
   { id: 1, name: "Abebe Tilahun", pos: "GK", club: "St. George", price: 4.5, points: 28, goals: 0, assists: 0, cleanSheets: 4 },
   { id: 2, name: "Bahiru Negash", pos: "GK", club: "Ethiopia Bunna", price: 4.5, points: 24, goals: 0, assists: 0, cleanSheets: 3 },
@@ -29,30 +28,38 @@ const INITIAL_BUDGET = 100.0;
 const MAX_PER_CLUB = 3;
 const HIT_PENALTY_PTS = 4;
 
-// --- 2. GLOBAL APP STATE ---
 let state = {
-  activeTab: 'pick-team', // 'pick-team' | 'transfers' | 'points' | 'rules'
-  squad: [],              // Array of selected player IDs (up to 15)
-  startingXI: [],         // Array of starting XI player IDs (up to 11)
-  bench: [],              // Array of bench player IDs (up to 4)
+  activeTab: 'pick-team',
+  squad: [],
+  startingXI: [],
+  bench: [],
   captainId: null,
   viceCaptainId: null,
   bank: INITIAL_BUDGET,
-  positionFilter: 'ALL',   // 'ALL' | 'GK' | 'DEF' | 'MID' | 'FWD'
+  positionFilter: 'ALL',
   searchQuery: '',
   hasSeenWelcome: false,
-  currentGameweek: 1,      // GW1 allows unlimited free squad picking
-  selectedForSwap: null,   // Tracks player ID selected for bench substitution
-  activeChip: null,        // 'wildcard' | 'freeHit' | 'tripleCaptain' | 'benchBoost' | null
-  usedChips: [],           // Array of used chip names e.g. ['wildcard']
-  freeTransfers: 1,        // Accumulated free transfers (rolling up to 5)
-  transfersMadeThisGW: 0,  // Number of transfers completed in active Gameweek
-  transferPenalty: 0,      // Calculated point deduction for extra transfers (-4 per hit)
-  purchasePrices: {},      // Maps playerId -> price paid when bought
-  savedFreeHitSquad: null  // Holds squad state to restore after Free Hit GW
+  currentGameweek: 1,
+  selectedForSwap: null,
+  activeChip: null,
+  usedChips: [],
+  freeTransfers: 1,
+  transfersMadeThisGW: 0,
+  transferPenalty: 0,
+  purchasePrices: {},
+  savedFreeHitSquad: null
 };
 
-// --- 3. STORAGE & STATE PERSISTENCE ---
+// ESCAPE HTML helper to avoid inserting raw user/remote data into templates
+function escapeHtml(s = '') {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function loadState() {
   const savedSquad = localStorage.getItem('epl_fantasy_squad');
   const savedWelcome = localStorage.getItem('epl_fantasy_welcome');
@@ -62,11 +69,7 @@ function loadState() {
   const savedEconomy = localStorage.getItem('epl_fantasy_economy');
 
   if (savedSquad) {
-    try {
-      state.squad = JSON.parse(savedSquad);
-    } catch (e) {
-      state.squad = [];
-    }
+    try { state.squad = JSON.parse(savedSquad); } catch (e) { state.squad = []; }
   }
 
   if (savedXI) {
@@ -131,11 +134,9 @@ function saveState() {
   }));
 }
 
-// --- DYNAMIC ECONOMY & SELLING PRICE CALCULATION ---
 function getSellingPrice(player) {
   const buyPrice = state.purchasePrices[player.id] !== undefined ? state.purchasePrices[player.id] : player.price;
   if (player.price > buyPrice) {
-    // 50% profit margin rounded down to nearest 0.1M
     const profit = player.price - buyPrice;
     const splitProfit = Math.floor((profit * 10) / 2) / 10;
     return parseFloat((buyPrice + splitProfit).toFixed(1));
@@ -154,12 +155,9 @@ function recalculateBank() {
 }
 
 function updateTransferPenalty() {
-  // GW1 is always unlimited free squad creation
   if (state.currentGameweek === 1 || state.activeChip === 'wildcard' || state.activeChip === 'freeHit') {
-    state.transferPenalty = 0;
-    return;
+    state.transferPenalty = 0; return;
   }
-
   const excessTransfers = Math.max(0, state.transfersMadeThisGW - state.freeTransfers);
   state.transferPenalty = excessTransfers * HIT_PENALTY_PTS;
 }
@@ -167,32 +165,22 @@ function updateTransferPenalty() {
 function autoAssignXIAndBench() {
   state.startingXI = [];
   state.bench = [];
-
   const squadPlayers = state.squad.map(id => INITIAL_PLAYERS.find(p => p.id === id)).filter(Boolean);
-
   const posOrder = ['GK', 'DEF', 'MID', 'FWD'];
+
   posOrder.forEach(pos => {
     const posPlayers = squadPlayers.filter(p => p.pos === pos);
     const starterLimit = pos === 'GK' ? 1 : pos === 'DEF' ? 4 : pos === 'MID' ? 4 : 2;
-    
     posPlayers.forEach((p, idx) => {
-      if (idx < starterLimit && state.startingXI.length < 11) {
-        state.startingXI.push(p.id);
-      } else {
-        state.bench.push(p.id);
-      }
+      if (idx < starterLimit && state.startingXI.length < 11) state.startingXI.push(p.id);
+      else state.bench.push(p.id);
     });
   });
 
-  if (state.startingXI.length > 0 && !state.captainId) {
-    state.captainId = state.startingXI[0];
-  }
-  if (state.startingXI.length > 1 && !state.viceCaptainId) {
-    state.viceCaptainId = state.startingXI[1];
-  }
+  if (state.startingXI.length > 0 && !state.captainId) state.captainId = state.startingXI[0];
+  if (state.startingXI.length > 1 && !state.viceCaptainId) state.viceCaptainId = state.startingXI[1];
 }
 
-// --- 4. VALIDATION, SQUAD & SWAP ACTIONS ---
 function getPlayerCountByPosition(pos) {
   return state.squad.filter(id => {
     const p = INITIAL_PLAYERS.find(item => item.id === id);
@@ -211,33 +199,23 @@ function canBuyPlayer(player) {
   if (state.squad.includes(player.id)) return { allowed: false, reason: "Already in squad" };
   if (state.squad.length >= MAX_SQUAD_SIZE) return { allowed: false, reason: "Squad full (15/15)" };
   if (state.bank < player.price) return { allowed: false, reason: "Insufficient budget" };
-  if (getPlayerCountByPosition(player.pos) >= SQUAD_LIMITS[player.pos]) {
-    return { allowed: false, reason: `Max ${SQUAD_LIMITS[player.pos]} ${player.pos}s allowed` };
-  }
-  if (getClubCount(player.club) >= MAX_PER_CLUB) {
-    return { allowed: false, reason: `Max ${MAX_PER_CLUB} players per club` };
-  }
+  if (getPlayerCountByPosition(player.pos) >= SQUAD_LIMITS[player.pos]) return { allowed: false, reason: `Max ${SQUAD_LIMITS[player.pos]} ${player.pos}s allowed` };
+  if (getClubCount(player.club) >= MAX_PER_CLUB) return { allowed: false, reason: `Max ${MAX_PER_CLUB} players per club` };
   return { allowed: true };
 }
 
 function addPlayerToSquad(playerId) {
   const player = INITIAL_PLAYERS.find(p => p.id === playerId);
   if (!player) return;
-
   const check = canBuyPlayer(player);
-  if (!check.allowed) {
-    alert(check.reason);
-    return;
-  }
+  if (!check.allowed) { alert(check.reason); return; }
 
-  // Only count towards transfer tally if squad was already fully formed (GW2+)
   if (state.currentGameweek > 1 && state.squad.length === MAX_SQUAD_SIZE - 1) {
     state.transfersMadeThisGW += 1;
   }
 
   state.squad.push(playerId);
   state.purchasePrices[playerId] = player.price;
-
   autoAssignXIAndBench();
   recalculateBank();
   updateTransferPenalty();
@@ -266,11 +244,9 @@ function removePlayerFromSquad(playerId) {
   renderApp();
 }
 
-// BENCH SUBSTITUTION & SWAP SYSTEM
 function swapPlayers(player1Id, player2Id) {
   const p1 = INITIAL_PLAYERS.find(p => p.id === player1Id);
   const p2 = INITIAL_PLAYERS.find(p => p.id === player2Id);
-
   if (!p1 || !p2) return;
 
   const p1InXI = state.startingXI.includes(player1Id);
@@ -279,7 +255,6 @@ function swapPlayers(player1Id, player2Id) {
   if (p1InXI !== p2InXI) {
     const starterId = p1InXI ? player1Id : player2Id;
     const benchId = p1InXI ? player2Id : player1Id;
-
     const starter = INITIAL_PLAYERS.find(p => p.id === starterId);
     const benchPlayer = INITIAL_PLAYERS.find(p => p.id === benchId);
 
@@ -302,14 +277,9 @@ function swapPlayers(player1Id, player2Id) {
 }
 
 function handlePlayerSelectForSwap(playerId) {
-  if (!state.selectedForSwap) {
-    state.selectedForSwap = playerId;
-  } else if (state.selectedForSwap === playerId) {
-    state.selectedForSwap = null;
-  } else {
-    swapPlayers(state.selectedForSwap, playerId);
-    return;
-  }
+  if (!state.selectedForSwap) { state.selectedForSwap = playerId; }
+  else if (state.selectedForSwap === playerId) { state.selectedForSwap = null; }
+  else { swapPlayers(state.selectedForSwap, playerId); return; }
   renderApp();
 }
 
@@ -321,9 +291,7 @@ function navigateToTransfersForPosition(pos) {
 
 function setCaptain(playerId) {
   if (!state.startingXI.includes(playerId)) return;
-  if (state.viceCaptainId === playerId) {
-    state.viceCaptainId = state.captainId;
-  }
+  if (state.viceCaptainId === playerId) { state.viceCaptainId = state.captainId; }
   state.captainId = playerId;
   saveState();
   renderApp();
@@ -337,15 +305,9 @@ function setViceCaptain(playerId) {
   renderApp();
 }
 
-// STRATEGIC CHIPS ACTIVATION
 function playChip(chipName) {
-  if (state.usedChips.includes(chipName)) {
-    alert(`${chipName} has already been used this season!`);
-    return;
-  }
-
+  if (state.usedChips.includes(chipName)) { alert(`${chipName} has already been used this season!`); return; }
   if (state.activeChip === chipName) {
-    // Cancel active chip
     if (chipName === 'freeHit' && state.savedFreeHitSquad) {
       state.squad = [...state.savedFreeHitSquad];
       state.savedFreeHitSquad = null;
@@ -353,60 +315,43 @@ function playChip(chipName) {
     }
     state.activeChip = null;
   } else {
-    // Activate chip
-    if (chipName === 'freeHit') {
-      state.savedFreeHitSquad = [...state.squad];
-    }
+    if (chipName === 'freeHit') state.savedFreeHitSquad = [...state.squad];
     state.activeChip = chipName;
   }
-
   updateTransferPenalty();
   saveState();
   renderApp();
 }
 
-// GAMEWEEK ADVANCE ENGINE
 function advanceGameweek() {
-  if (state.squad.length < MAX_SQUAD_SIZE) {
-    alert("Please build a full 15-player squad before advancing to the next Gameweek.");
-    return;
-  }
+  if (state.squad.length < MAX_SQUAD_SIZE) { alert("Please build a full 15-player squad before advancing to the next Gameweek."); return; }
 
-  // Handle Free Hit reversal at GW deadline
   if (state.activeChip === 'freeHit' && state.savedFreeHitSquad) {
     state.squad = [...state.savedFreeHitSquad];
     state.savedFreeHitSquad = null;
     autoAssignXIAndBench();
   }
 
-  // Mark active chip as used
   if (state.activeChip) {
-    if (!state.usedChips.includes(state.activeChip)) {
-      state.usedChips.push(state.activeChip);
-    }
+    if (!state.usedChips.includes(state.activeChip)) state.usedChips.push(state.activeChip);
     state.activeChip = null;
   }
 
-  // Calculate remaining Free Transfers for next GW
   if (state.currentGameweek > 1) {
     const usedFTs = Math.min(state.freeTransfers, state.transfersMadeThisGW);
     state.freeTransfers = Math.min(5, Math.max(1, state.freeTransfers - usedFTs + 1));
   } else {
-    state.freeTransfers = 1; // GW2 starts with 1 Free Transfer
+    state.freeTransfers = 1;
   }
 
   state.currentGameweek += 1;
   state.transfersMadeThisGW = 0;
   state.transferPenalty = 0;
 
-  // Simulate dynamic market price fluctuations (+0.1M / -0.1M)
   INITIAL_PLAYERS.forEach(p => {
     const rand = Math.random();
-    if (rand > 0.75) {
-      p.price = parseFloat((p.price + 0.1).toFixed(1));
-    } else if (rand < 0.20 && p.price > 4.0) {
-      p.price = parseFloat((p.price - 0.1).toFixed(1));
-    }
+    if (rand > 0.75) p.price = parseFloat((p.price + 0.1).toFixed(1));
+    else if (rand < 0.20 && p.price > 4.0) p.price = parseFloat((p.price - 0.1).toFixed(1));
   });
 
   recalculateBank();
@@ -415,18 +360,15 @@ function advanceGameweek() {
   alert(`Advanced to Gameweek ${state.currentGameweek}! Player prices have updated.`);
 }
 
-// --- 5. RENDER COMPONENTS ---
+// --- RENDERING ---
 
-// A. Welcome Onboarding Modal
 function renderWelcomeModal() {
   if (state.hasSeenWelcome) return '';
-
   return `
     <div id="welcome-modal" class="modal-overlay">
       <div class="modal-card">
         <h2>Welcome to Ethiopian Premier League Fantasy!</h2>
         <p>Build your 15-player squad and compete across Gameweeks.</p>
-        
         <div class="rules-list">
           <h4>Official Squad Selection Rules:</h4>
           <ul>
@@ -436,18 +378,15 @@ function renderWelcomeModal() {
             <li><strong>Club Limit:</strong> Max 3 players from any single club</li>
           </ul>
         </div>
-
         <p class="guide-tip">
           <strong>How to start:</strong> Click any empty slot (<span class="plus-badge">+</span>) on the pitch to go directly to the Transfer Market and buy a player for that position.
         </p>
-
         <button id="close-welcome-btn" class="btn-primary">Build My Squad</button>
       </div>
     </div>
   `;
 }
 
-// B. Header & Squad Overview Bar
 function renderHeaderStats() {
   const squadVal = INITIAL_PLAYERS.reduce((sum, p) => {
     return state.squad.includes(p.id) ? sum + p.price : sum;
@@ -485,7 +424,6 @@ function renderHeaderStats() {
   `;
 }
 
-// C. Tab Navigation
 function renderNavigation() {
   return `
     <nav class="tab-nav">
@@ -497,7 +435,6 @@ function renderNavigation() {
   `;
 }
 
-// D. Pitch & Squad View (Pick Team)
 function renderPitchView() {
   const chips = [
     { key: 'wildcard', label: 'Wildcard' },
@@ -506,19 +443,26 @@ function renderPitchView() {
     { key: 'benchBoost', label: 'Bench Boost' }
   ];
 
-  let chipsHtml = `
+  const chipsHtml = `
     <div class="chips-bar" style="display:flex; gap:10px; justify-content:center; margin-bottom:15px; flex-wrap:wrap;">
       ${chips.map(chip => {
         const isUsed = state.usedChips.includes(chip.key);
         const isActive = state.activeChip === chip.key;
         return `
-          <button 
-            class="chip-btn ${isActive ? 'active' : ''}" 
-            data-chip="${chip.key}" 
+          <button
+            class="chip-btn ${isActive ? 'active' : ''}"
+            data-chip="${escapeHtml(chip.key)}"
             ${isUsed ? 'disabled' : ''}
-            style="padding: 8px 14px; border-radius: 20px; border: 1px solid #ccc; background: ${isActive ? '#2e7d32' : isUsed ? '#ccc' : '#fff'}; color: ${isActive ? '#fff' : '#000'}; cursor: ${isUsed ? 'not-allowed' : 'pointer'}; font-weight: bold;"
+            style="
+              padding: 8px 14px;
+              border-radius: 20px;
+              border: 1px solid #ccc;
+              background: ${isActive ? '#2e7d32' : isUsed ? '#ccc' : '#fff'};
+              color: ${isActive ? '#fff' : '#000'};
+              cursor: ${isUsed ? 'not-allowed' : 'pointer'};
+            "
           >
-            ${chip.label}${isUsed ? '(Used)' : isActive ? 'ACTIVE' : ''}
+            ${escapeHtml(chip.label)}${isUsed ? ' (Used)' : isActive ? ' ACTIVE' : ''}
           </button>
         `;
       }).join('')}
@@ -539,7 +483,7 @@ function renderPitchView() {
       .map(id => INITIAL_PLAYERS.find(p => p.id === id))
       .filter(p => p && p.pos === posGroup.key);
 
-    html += `<div class="pitch-row position-${posGroup.key.toLowerCase()}">`;
+    html += `<div class="pitch-row position-${escapeHtml(posGroup.key.toLowerCase())}">`;
 
     for (let i = 0; i < posGroup.req; i++) {
       const player = startersInPos[i];
@@ -551,13 +495,13 @@ function renderPitchView() {
         html += `
           <div class="player-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
             <button class="remove-btn" data-remove="${player.id}" title="Remove player">×</button>
-            <div class="shirt-icon">${player.pos}</div>
+            <div class="shirt-icon">${escapeHtml(player.pos)}</div>
             <div class="player-name">
-              ${player.name}
+              ${escapeHtml(player.name)}
               ${isC ? '<span class="role-badge captain">C</span>' : ''}
               ${isVC ? '<span class="role-badge vice">VC</span>' : ''}
             </div>
-            <div class="player-club">${player.club}</div>
+            <div class="player-club">${escapeHtml(player.club)}</div>
             <div class="player-price">Br ${player.price}M</div>
             <div class="card-actions">
               <button class="btn-role" data-set-c="${player.id}">C</button>
@@ -567,9 +511,9 @@ function renderPitchView() {
         `;
       } else {
         html += `
-          <div class="player-card empty" data-pick-pos="${posGroup.key}">
+          <div class="player-card empty" data-pick-pos="${escapeHtml(posGroup.key)}">
             <div class="add-slot-btn">+</div>
-            <div class="slot-label">Add ${posGroup.key}</div>
+            <div class="slot-label">Add ${escapeHtml(posGroup.key)}</div>
           </div>
         `;
       }
@@ -580,7 +524,6 @@ function renderPitchView() {
 
   html += `</div>`;
 
-  // Render Bench
   const benchPlayers = state.bench.map(id => INITIAL_PLAYERS.find(p => p.id === id)).filter(Boolean);
   html += `
     <div class="bench-container">
@@ -592,9 +535,9 @@ function renderPitchView() {
           return `
             <div class="player-card bench-card filled ${isSelectedSwap ? 'swap-active' : ''}" data-player-id="${player.id}">
               <button class="remove-btn" data-remove="${player.id}">×</button>
-              <div class="shirt-icon bench-icon">${player.pos}</div>
-              <div class="player-name">${player.name}</div>
-              <div class="player-club">${player.club}</div>
+              <div class="shirt-icon bench-icon">${escapeHtml(player.pos)}</div>
+              <div class="player-name">${escapeHtml(player.name)}</div>
+              <div class="player-club">${escapeHtml(player.club)}</div>
               <div class="player-price">Br ${player.price}M</div>
             </div>
           `;
@@ -606,12 +549,11 @@ function renderPitchView() {
   return html;
 }
 
-// E. Transfer Market View
 function renderTransferMarket() {
   const filteredPlayers = INITIAL_PLAYERS.filter(player => {
     const matchesPos = state.positionFilter === 'ALL' || player.pos === state.positionFilter;
-    const matchesSearch = player.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-                          player.club.toLowerCase().includes(state.searchQuery.toLowerCase());
+    const q = state.searchQuery.toLowerCase();
+    const matchesSearch = player.name.toLowerCase().includes(q) || player.club.toLowerCase().includes(q);
     return matchesPos && matchesSearch;
   });
 
@@ -632,14 +574,14 @@ function renderTransferMarket() {
           type="text" 
           id="player-search" 
           placeholder="Search player or club..." 
-          value="${state.searchQuery}"
+          value="${escapeHtml(state.searchQuery)}"
         />
         <div class="position-filters">
           ${['ALL', 'GK', 'DEF', 'MID', 'FWD'].map(pos => `
             <button 
               class="filter-chip ${state.positionFilter === pos ? 'active' : ''}" 
-              data-filter-pos="${pos}">
-              ${pos}
+              data-filter-pos="${escapeHtml(pos)}">
+              ${escapeHtml(pos)}
             </button>
           `).join('')}
         </div>
@@ -655,10 +597,10 @@ function renderTransferMarket() {
           return `
             <div class="market-item ${isSelected ? 'in-squad' : ''}">
               <div class="item-info">
-                <span class="pos-badge ${player.pos.toLowerCase()}">${player.pos}</span>
+                <span class="pos-badge ${escapeHtml(player.pos.toLowerCase())}">${escapeHtml(player.pos)}</span>
                 <div class="details">
-                  <span class="name">${player.name}</span>
-                  <span class="club">${player.club} •${player.points} pts</span>
+                  <span class="name">${escapeHtml(player.name)}</span>
+                  <span class="club">${escapeHtml(player.club)} •${player.points} pts</span>
                 </div>
               </div>
               <div class="item-action">
@@ -668,7 +610,7 @@ function renderTransferMarket() {
                   <button 
                     class="btn-buy" 
                     data-buy-id="${player.id}" 
-                    ${!check.allowed ? `disabled title="${check.reason}"` : ''}>
+                    ${!check.allowed ? `disabled title="${escapeHtml(check.reason)}"` : ''}>
                     + Buy
                   </button>
                 `}
@@ -681,7 +623,6 @@ function renderTransferMarket() {
   `;
 }
 
-// F. Points & Scoreboard View
 function renderPointsView() {
   let grossTeamPoints = 0;
   const isTripleCaptain = state.activeChip === 'tripleCaptain';
@@ -690,22 +631,15 @@ function renderPointsView() {
   const pointsListHtml = state.startingXI.map(id => {
     const p = INITIAL_PLAYERS.find(item => item.id === id);
     if (!p) return '';
-
     let multiplier = 1;
     let badge = '';
-    if (state.captainId === p.id) {
-      multiplier = isTripleCaptain ? 3 : 2;
-      badge = isTripleCaptain ? ' (TC)' : ' (C)';
-    } else if (state.viceCaptainId === p.id) {
-      badge = ' (VC)';
-    }
-
+    if (state.captainId === p.id) { multiplier = isTripleCaptain ? 3 : 2; badge = isTripleCaptain ? ' (TC)' : ' (C)'; }
+    else if (state.viceCaptainId === p.id) { badge = ' (VC)'; }
     const calculatedPts = p.points * multiplier;
     grossTeamPoints += calculatedPts;
-
     return `
       <div class="score-row">
-        <span class="player-meta">${p.name}${badge} - <small>${p.club}</small></span>
+        <span class="player-meta">${escapeHtml(p.name)}${badge} - <small>${escapeHtml(p.club)}</small></span>
         <span class="player-score">${calculatedPts} pts ${multiplier > 1 ? `(${multiplier}x)` : ''}</span>
       </div>
     `;
@@ -719,7 +653,7 @@ function renderPointsView() {
       grossTeamPoints += p.points;
       return `
         <div class="score-row bench-score" style="opacity: 0.85; background: #e8f5e9;">
-          <span class="player-meta">${p.name} (Bench Boost) - <small>${p.club}</small></span>
+          <span class="player-meta">${escapeHtml(p.name)} (Bench Boost) - <small>${escapeHtml(p.club)}</small></span>
           <span class="player-score">${p.points} pts</span>
         </div>
       `;
@@ -737,7 +671,7 @@ function renderPointsView() {
           Gross Score: ${grossTeamPoints} pts 
           ${state.transferPenalty > 0 ? ` | Hits Deduction: <span style="color:#c62828;">-${state.transferPenalty} pts</span>` : ''}
         </p>
-        ${state.activeChip ? `<p style="color:#2e7d32; font-weight:bold;">Active Chip: ${state.activeChip.toUpperCase()}</p>` : ''}
+        ${state.activeChip ? `<p style="color:#2e7d32; font-weight:bold;">Active Chip: ${escapeHtml(state.activeChip)}</p>` : ''}
       </div>
 
       <div class="breakdown-card">
@@ -749,7 +683,6 @@ function renderPointsView() {
   `;
 }
 
-// G. Rules View
 function renderRulesView() {
   return `
     <div class="rules-container">
@@ -769,20 +702,13 @@ function renderRulesView() {
   `;
 }
 
-// --- 6. MAIN RENDER CONTROLLER ---
 function renderApp() {
   const appRoot = document.getElementById('app') || document.body;
-
   let mainContent = '';
-  if (state.activeTab === 'pick-team') {
-    mainContent = renderPitchView();
-  } else if (state.activeTab === 'transfers') {
-    mainContent = renderTransferMarket();
-  } else if (state.activeTab === 'points') {
-    mainContent = renderPointsView();
-  } else if (state.activeTab === 'rules') {
-    mainContent = renderRulesView();
-  }
+  if (state.activeTab === 'pick-team') mainContent = renderPitchView();
+  else if (state.activeTab === 'transfers') mainContent = renderTransferMarket();
+  else if (state.activeTab === 'points') mainContent = renderPointsView();
+  else if (state.activeTab === 'rules') mainContent = renderRulesView();
 
   appRoot.innerHTML = `
     <div class="app-container">
@@ -798,43 +724,21 @@ function renderApp() {
   attachEventListeners();
 }
 
-// --- 7. EVENT LISTENERS ---
 function attachEventListeners() {
-  // Onboarding Modal Close
   const closeBtn = document.getElementById('close-welcome-btn');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      state.hasSeenWelcome = true;
-      saveState();
-      renderApp();
-    });
-  }
+  if (closeBtn) closeBtn.addEventListener('click', () => { state.hasSeenWelcome = true; saveState(); renderApp(); });
 
-  // Navigation Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      state.activeTab = e.currentTarget.dataset.tab;
-      renderApp();
-    });
+    btn.addEventListener('click', (e) => { state.activeTab = e.currentTarget.dataset.tab; renderApp(); });
   });
 
-  // Advance Gameweek Button
   const advanceBtn = document.getElementById('advance-gw-btn');
-  if (advanceBtn) {
-    advanceBtn.addEventListener('click', () => {
-      advanceGameweek();
-    });
-  }
+  if (advanceBtn) advanceBtn.addEventListener('click', () => { advanceGameweek(); });
 
-  // Pick Slot (+ Button) Direct Routing
   document.querySelectorAll('[data-pick-pos]').forEach(slot => {
-    slot.addEventListener('click', (e) => {
-      const pos = e.currentTarget.dataset.pickPos;
-      navigateToTransfersForPosition(pos);
-    });
+    slot.addEventListener('click', (e) => { const pos = e.currentTarget.dataset.pickPos; navigateToTransfersForPosition(pos); });
   });
 
-  // Card Click for Bench Substitution / Swapping
   document.querySelectorAll('.player-card.filled').forEach(card => {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.remove-btn') || e.target.closest('.btn-role')) return;
@@ -843,42 +747,22 @@ function attachEventListeners() {
     });
   });
 
-  // Remove Player
   document.querySelectorAll('[data-remove]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = parseInt(e.currentTarget.dataset.remove, 10);
-      removePlayerFromSquad(id);
-    });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(e.currentTarget.dataset.remove, 10); removePlayerFromSquad(id); });
   });
 
-  // Captain Assignment
   document.querySelectorAll('[data-set-c]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = parseInt(e.currentTarget.dataset.setC, 10);
-      setCaptain(id);
-    });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(e.currentTarget.dataset.setC, 10); setCaptain(id); });
   });
 
-  // Vice Captain Assignment
   document.querySelectorAll('[data-set-vc]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const id = parseInt(e.currentTarget.dataset.setVc, 10);
-      setViceCaptain(id);
-    });
+    btn.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(e.currentTarget.dataset.setVc, 10); setViceCaptain(id); });
   });
 
-  // Position Filter Chips
   document.querySelectorAll('[data-filter-pos]').forEach(chip => {
-    chip.addEventListener('click', (e) => {
-      state.positionFilter = e.currentTarget.dataset.filterPos;
-      renderApp();
-    });
+    chip.addEventListener('click', (e) => { state.positionFilter = e.currentTarget.dataset.filterPos; renderApp(); });
   });
 
-  // Search Input with Focus Retention
   const searchInput = document.getElementById('player-search');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -886,40 +770,54 @@ function attachEventListeners() {
       const cursor = e.target.selectionStart;
       renderApp();
       const refreshedInput = document.getElementById('player-search');
-      if (refreshedInput) {
-        refreshedInput.focus();
-        refreshedInput.setSelectionRange(cursor, cursor);
-      }
+      if (refreshedInput) { refreshedInput.focus(); refreshedInput.setSelectionRange(cursor, cursor); }
     });
   }
 
-  // Buy Player
   document.querySelectorAll('[data-buy-id]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = parseInt(e.currentTarget.dataset.buyId, 10);
-      addPlayerToSquad(id);
-    });
+    btn.addEventListener('click', (e) => { const id = parseInt(e.currentTarget.dataset.buyId, 10); addPlayerToSquad(id); });
   });
 
-  // Sell Player
   document.querySelectorAll('[data-sell-id]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = parseInt(e.currentTarget.dataset.sellId, 10);
-      removePlayerFromSquad(id);
-    });
+    btn.addEventListener('click', (e) => { const id = parseInt(e.currentTarget.dataset.sellId, 10); removePlayerFromSquad(id); });
   });
 
-  // Chip Activation Event Listener
   document.querySelectorAll('[data-chip]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const chipName = e.currentTarget.dataset.chip;
-      playChip(chipName);
-    });
+    btn.addEventListener('click', (e) => { const chipName = e.currentTarget.dataset.chip; playChip(chipName); });
   });
 }
 
-// --- 8. INIT APP ---
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
   renderApp();
 });
+
+/* OPTIONAL: If you later want to load players from your server API instead of static INITIAL_PLAYERS,
+   uncomment and call loadPlayersFromApi() during init. Be sure your /api/players route returns safe fields.
+
+async function loadPlayersFromApi() {
+  try {
+    const res = await fetch('/api/players');
+    if (!res.ok) throw new Error('Failed to load players');
+    const players = await res.json();
+    INITIAL_PLAYERS.length = 0;
+    players.forEach(p => {
+      // ensure fields exist and sanitize as needed
+      INITIAL_PLAYERS.push({
+        id: p.id,
+        name: p.name,
+        pos: p.position || p.pos,
+        club: p.club,
+        price: p.price,
+        points: p.points || 0,
+        goals: p.goals || 0,
+        assists: p.assists || 0,
+        cleanSheets: p.cleanSheets || 0
+      });
+    });
+    renderApp();
+  } catch (err) {
+    console.error('Error loading players from API:', err);
+  }
+}
+*/
