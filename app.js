@@ -1,19 +1,21 @@
 /* ==========================================================================
-   EPL FANTASY — VERSION 4
-   Full front-end with:
-   - pitch layout
-   - welcome modal
-   - squad tab
-   - market tab
-   - points tab
-   - rules
-   - chips
-   - captain / vice captain
-   - pending transfers
-   - gameweek finalization simulation
+   EPL Fantasy — Version 5
+   FPL-inspired front-end single-page app
+   Works with: index.html + styles.css
    ==========================================================================
-   Works as browser app with index.html and styles.css.
-   ========================================================================== */
+   Features:
+   - “Welcome” modal
+   - FPL-style top bar
+   - squad tab with pitch
+   - side summary
+   - transfer market
+   - pending transfers
+   - chip controls
+   - captain / vice
+   - point simulation
+   - rules and history
+   ==========================================================================
+*/
 
 const INITIAL_PLAYERS = [
   { id: 1, name: "Abebe Tilahun", pos: "GK", club: "St. George", price: 4.5, points: 28 },
@@ -68,18 +70,25 @@ let state = {
   lastTransferConfirmed: false,
   pendingTransfers: [],
   history: [],
-  hasSeenWelcome: false,
-  _gwCaptainOverride: null,
   marketFilter: 'All',
-  marketSearch: ''
+  marketSearch: '',
+  hasSeenWelcome: false,
+  _gwCaptainOverride: null
 };
 
 let pendingIdCounter = Date.now();
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function saveState() {
-  try {
-    localStorage.setItem('epl_state', JSON.stringify(state));
-  } catch {}
+  try { localStorage.setItem('epl_state', JSON.stringify(state)); } catch {}
 }
 
 function loadState() {
@@ -89,15 +98,6 @@ function loadState() {
     const parsed = JSON.parse(raw);
     state = Object.assign(state, parsed);
   } catch {}
-}
-
-function escapeHtml(value = '') {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 function getPlayerById(id) {
@@ -126,16 +126,6 @@ function getSquadCounts() {
   state.squad.forEach(id => {
     const p = getPlayerById(id);
     if (p) counts[p.pos] = (counts[p.pos] || 0) + 1;
-  });
-  return counts;
-}
-
-function getClubCounts() {
-  const counts = {};
-  state.squad.forEach(id => {
-    const p = getPlayerById(id);
-    if (!p) return;
-    counts[p.club] = (counts[p.club] || 0) + 1;
   });
   return counts;
 }
@@ -257,372 +247,6 @@ function autoAssignXIAndBench() {
   if (!state.viceCaptainId && state.startingXI.length > 1) state.viceCaptainId = state.startingXI[1];
 }
 
-function ensureModalRoot() {
-  let root = document.getElementById('app-modal-root');
-  if (!root) {
-    root = document.createElement('div');
-    root.id = 'app-modal-root';
-    document.body.appendChild(root);
-  }
-  return root;
-}
-
-function showModal(title, html, confirmText = 'OK', onConfirm = null, onCancel = null, hideCancel = false) {
-  const root = ensureModalRoot();
-  root.innerHTML = `
-    <div class="modal-overlay">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title">${escapeHtml(title)}</div>
-        </div>
-        <div class="modal-body">${html}</div>
-        <div class="modal-actions">
-          ${hideCancel ? '' : `<button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>`}
-          <button class="btn btn-primary" id="modal-confirm-btn">${escapeHtml(confirmText)}</button>
-        </div>
-      </div>
-    </div>
-  `;
-  root.style.display = 'block';
-
-  const cleanup = () => { root.style.display = 'none'; root.innerHTML = ''; };
-
-  const confirmBtn = document.getElementById('modal-confirm-btn');
-  if (confirmBtn) confirmBtn.onclick = () => { cleanup(); if (onConfirm) onConfirm(); };
-
-  const cancelBtn = document.getElementById('modal-cancel-btn');
-  if (cancelBtn) cancelBtn.onclick = () => { cleanup(); if (onCancel) onCancel(); };
-
-  const overlay = root.querySelector('.modal-overlay');
-  if (overlay) {
-    overlay.onclick = (e) => {
-      if (e.target === overlay) {
-        cleanup();
-        if (onCancel) onCancel();
-      }
-    };
-  }
-}
-
-function showAlert(message) {
-  showModal('Notice', `<div>${escapeHtml(message)}</div>`, 'Close', null, null, true);
-}
-
-function showConfirm(message, onYes, onNo) {
-  showModal('Confirm', `<div>${escapeHtml(message)}</div>`, 'Yes', onYes, onNo, false);
-}
-
-/* ---------------------------
-   Pending transfers
-   --------------------------- */
-function stageBuy(playerId) {
-  if (state.pendingTransfers.find(t => t.type === 'buy' && t.playerId === playerId)) {
-    showAlert('This buy is already pending.');
-    return;
-  }
-  state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'buy', playerId, ts: Date.now(), removing: false });
-  renderApp();
-}
-
-function stageSell(playerId) {
-  if (!state.squad.includes(playerId)) {
-    showAlert('Player not in squad.');
-    return;
-  }
-  if (state.pendingTransfers.find(t => t.type === 'sell' && t.playerId === playerId)) {
-    showAlert('This sell is already pending.');
-    return;
-  }
-  state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'sell', playerId, ts: Date.now(), removing: false });
-  renderApp();
-}
-
-function removePendingByIdAnimated(id) {
-  const idx = state.pendingTransfers.findIndex(t => t.id === id);
-  if (idx === -1) return;
-  state.pendingTransfers[idx].removing = true;
-  renderApp();
-
-  setTimeout(() => {
-    state.pendingTransfers = state.pendingTransfers.filter(t => t.id !== id);
-    renderApp();
-  }, 260);
-}
-
-function clearPendingTransfers() {
-  if (!state.pendingTransfers.length) return;
-  showConfirm('Clear all pending transfers?', () => {
-    state.pendingTransfers.forEach(t => t.removing = true);
-    renderApp();
-    setTimeout(() => {
-      state.pendingTransfers = [];
-      renderApp();
-    }, 260);
-  });
-}
-
-function calculatePendingPreview(extra = null) {
-  const staged = [...state.pendingTransfers];
-  if (extra) staged.push({ id: 'hyp', type: extra.type, playerId: extra.playerId });
-
-  let futureSquad = [...state.squad];
-  staged.filter(t => t.type === 'sell').forEach(t => {
-    futureSquad = futureSquad.filter(id => id !== t.playerId);
-  });
-  staged.filter(t => t.type === 'buy').forEach(t => {
-    if (!futureSquad.includes(t.playerId)) futureSquad.push(t.playerId);
-  });
-
-  const buys = staged.filter(t => t.type === 'buy').map(t => getPlayerById(t.playerId)).filter(Boolean);
-  const sells = staged.filter(t => t.type === 'sell').map(t => getPlayerById(t.playerId)).filter(Boolean);
-
-  const sumBuys = buys.reduce((sum, p) => sum + p.price, 0);
-  const sumSells = sells.reduce((sum, p) => sum + getSellingPrice(p), 0);
-
-  let projectedBank = state.bank - sumBuys + sumSells;
-
-  const pendingCount = staged.length;
-  const usingWildcard = state.activeChip === 'wildcard';
-  const usingFreeHit = state.activeChip === 'freeHit';
-  let projectedTransfersMade = state.transfersMadeThisGW + pendingCount;
-  let extraTransfers = 0;
-  if (!usingWildcard && !usingFreeHit) {
-    extraTransfers = Math.max(0, projectedTransfersMade - state.freeTransfers);
-  }
-
-  const projectedHits = extraTransfers * HIT_PENALTY;
-  return {
-    projectedBank: parseFloat(projectedBank.toFixed(1)),
-    projectedHits,
-    transfersApplied: pendingCount,
-    projectedSquadValue: parseFloat(computeSquadValue(futureSquad).toFixed(1)),
-    projectedClubCounts: computeClubCounts(futureSquad),
-    buys,
-    sells
-  };
-}
-
-function applyPendingTransfers() {
-  if (!state.pendingTransfers.length) {
-    showAlert('No pending transfers to apply.');
-    return;
-  }
-
-  const usingWildcard = state.activeChip === 'wildcard';
-  const usingFreeHit = state.activeChip === 'freeHit';
-  let applied = 0;
-
-  const sells = state.pendingTransfers.filter(t => t.type === 'sell');
-  for (const t of sells) {
-    const p = getPlayerById(t.playerId);
-    if (!p || !state.squad.includes(p.id)) continue;
-
-    const soldFor = getSellingPrice(p);
-    state.squad = state.squad.filter(id => id !== p.id);
-    delete state.purchasePrices[p.id];
-    state.bank = parseFloat((state.bank + soldFor).toFixed(1));
-    applied++;
-  }
-
-  const buys = state.pendingTransfers.filter(t => t.type === 'buy');
-  for (const t of buys) {
-    const p = getPlayerById(t.playerId);
-    if (!p) continue;
-
-    const check = canAddPlayer(p);
-    if (!check.allowed) {
-      showAlert(`Cannot buy ${p.name}: ${check.reason}`);
-      continue;
-    }
-
-    state.squad.push(p.id);
-    state.purchasePrices[p.id] = p.price;
-    state.bank = parseFloat((state.bank - p.price).toFixed(1));
-    applied++;
-  }
-
-  if (!usingWildcard && !usingFreeHit) {
-    state.transfersMadeThisGW += applied;
-  }
-
-  state.lastTransferConfirmed = applied > 0;
-  state.pendingTransfers = [];
-  recalculateBank();
-  updateTransferPenalty();
-  autoAssignXIAndBench();
-  saveState();
-  renderApp();
-  showAlert(`Confirmed ${applied} transfer(s).`);
-}
-
-function showTransferBreakdownModal(extra = null) {
-  const preview = calculatePendingPreview(extra);
-  const lines = [];
-  preview.sells.forEach(p => lines.push({ type: 'Sell', name: p.name, price: getSellingPrice(p), sign: '+' }));
-  preview.buys.forEach(p => lines.push({ type: 'Buy', name: p.name, price: p.price, sign: '-' }));
-
-  const htmlLines = lines.length === 0
-    ? '<div>(no transfers)</div>'
-    : lines.map(line => `
-      <div class="transfer-line">
-        <div class="transfer-left">
-          <span class="badge">${escapeHtml(line.type)}</span>
-          <span>${escapeHtml(line.name)}</span>
-        </div>
-        <span class="price-badge">${line.sign} Br ${line.price}M</span>
-      </div>
-    `).join('');
-
-  const clubCountsHtml = Object.keys(preview.projectedClubCounts).map(club => {
-    const n = preview.projectedClubCounts[club];
-    const over = n > MAX_PER_CLUB;
-    return `
-      <div style="display:flex;justify-content:space-between;padding:4px 0;">
-        <span>${escapeHtml(club)}</span>
-        <span style="color:${over ? '#ff8a80' : '#edf4ff'}">${n}${over ? ' ⚠︎' : ''}</span>
-      </div>
-    `;
-  }).join('');
-
-  const totals = `
-    <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">
-      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Bank</span><strong>Br ${preview.projectedBank}M</strong></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Squad Value</span><strong>Br ${preview.projectedSquadValue}M</strong></div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Hits</span><strong>-${preview.projectedHits} pts</strong></div>
-      <div style="margin-top:8px;"><div style="font-weight:700;margin-bottom:4px;">Club counts</div>${clubCountsHtml}</div>
-    </div>
-  `;
-
-  showModal('Transfer Cost Breakdown', `<div>${htmlLines}${totals}</div>`, extra ? 'Stage & Confirm' : 'Confirm Transfers', () => {
-    if (extra) {
-      state.pendingTransfers.push({ id: Date.now(), type: extra.type, playerId: extra.playerId, ts: Date.now() });
-    }
-    applyPendingTransfers();
-  }, null, false);
-}
-
-/* ---------------------------
-   Replacement suggestions
-   --------------------------- */
-function findReplacementCandidates(targetPlayerId) {
-  const target = getPlayerById(targetPlayerId);
-  if (!target) return { direct: [], swapProposals: [] };
-
-  const direct = INITIAL_PLAYERS.filter(p => !state.squad.includes(p.id) && p.pos === target.pos && p.id !== targetPlayerId)
-    .sort((a, b) => b.points - a.points)
-    .slice(0, 8);
-
-  const sellCandidates = state.squad
-    .map(id => getPlayerById(id))
-    .filter(Boolean)
-    .filter(p => p.pos === target.pos)
-    .sort((a, b) => a.points - b.points)
-    .slice(0, 8);
-
-  const swapProposals = [];
-  direct.forEach(dc => {
-    const affordable = canAddPlayer(dc).allowed;
-    if (affordable) {
-      swapProposals.push({ buy: dc, sell: null, reason: 'Affordable' });
-    } else {
-      for (const sc of sellCandidates) {
-        const tempBank = state.bank + getSellingPrice(sc);
-        if (tempBank >= dc.price) {
-          swapProposals.push({ buy: dc, sell: sc, reason: `Sell ${sc.name} to afford` });
-          break;
-        }
-      }
-    }
-  });
-
-  return { direct, swapProposals };
-}
-
-function showReplacementModal(targetPlayerId) {
-  const target = getPlayerById(targetPlayerId);
-  if (!target) return;
-
-  const { direct, swapProposals } = findReplacementCandidates(targetPlayerId);
-
-  const directHtml = direct.length === 0
-    ? '<div style="color:#a7b8d0;">No direct candidates found.</div>'
-    : direct.map(player => {
-      const affordable = canAddPlayer(player).allowed;
-      return `
-        <div class="transfer-line">
-          <div class="transfer-left">
-            <span class="badge">${escapeHtml(player.pos)}</span>
-            <div>
-              <div style="font-weight:700;">${escapeHtml(player.name)}</div>
-              <div style="font-size:12px;color:#a7b8d0;">${escapeHtml(player.club)} • Br ${player.price}M</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost preview-single" data-id="${player.id}">Preview</button>
-            <button class="btn btn-primary stage-swap" data-buy="${player.id}" data-sell="${targetPlayerId}" ${affordable ? '' : 'disabled'}>Stage swap</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-  const swapHtml = swapProposals.length === 0
-    ? '<div style="color:#a7b8d0;">No swap suggestions found.</div>'
-    : swapProposals.map(item => {
-      const buy = item.buy;
-      const sell = item.sell;
-      return `
-        <div class="transfer-line">
-          <div class="transfer-left">
-            <span class="badge">Swap</span>
-            <div>
-              <div style="font-weight:700;">${escapeHtml(buy.name)}</div>
-              <div style="font-size:12px;color:#a7b8d0;">${sell ? `Sells: ${escapeHtml(sell.name)} • ` : ''}Br ${buy.price}M</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost preview-single" data-id="${buy.id}">Preview</button>
-            <button class="btn btn-primary stage-swap" data-buy="${buy.id}" data-sell="${sell ? sell.id : targetPlayerId}">Stage swap</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-  showModal(`Replacement suggestions for ${escapeHtml(target.name)}`, `
-    <div>
-      <h4>Direct candidates</h4>
-      ${directHtml}
-      <h4 style="margin-top:18px;">Swap proposals</h4>
-      ${swapHtml}
-    </div>
-  `, 'Close', null, null, true);
-
-  setTimeout(() => {
-    document.querySelectorAll('.stage-swap').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const buyId = Number(e.currentTarget.dataset.buy);
-        const sellId = Number(e.currentTarget.dataset.sell);
-
-        state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'sell', playerId: sellId, ts: Date.now() });
-        state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'buy', playerId: buyId, ts: Date.now() });
-        saveState();
-        renderApp();
-        showAlert(`Staged swap: sell ${sellId} + buy ${buyId}`);
-      });
-    });
-
-    document.querySelectorAll('.preview-single').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = Number(e.currentTarget.dataset.id);
-        const extra = { type: state.squad.includes(id) ? 'sell' : 'buy', playerId: id };
-        showTransferBreakdownModal(extra);
-      });
-    });
-  }, 20);
-}
-
-/* ---------------------------
-   Gameweek logic
-   --------------------------- */
 function normalizeStat(obj = {}) {
   return {
     minutes: Number(obj.minutes || 0),
@@ -650,7 +274,9 @@ function formationValidAfterSwap(startersIds) {
 
 function applyAutomaticSubstitutions(playedData) {
   const stats = {};
-  for (const k in playedData) stats[Number(k)] = normalizeStat(playedData[k]);
+  for (const key in playedData) {
+    stats[Number(key)] = normalizeStat(playedData[key]);
+  }
 
   const starters = [...state.startingXI];
   const bench = [...state.bench];
@@ -687,11 +313,13 @@ function applyAutomaticSubstitutions(playedData) {
       const bid = bench[bi];
       const b = getPlayerById(bid);
       if (!b) continue;
+
       const bStats = stats[bid] || { minutes: 0 };
       if ((bStats.minutes || 0) === 0) continue;
 
       const sim = starters.slice();
       sim[i] = bid;
+
       if (formationValidAfterSwap(sim)) {
         candidateIndex = bi;
         break;
@@ -909,120 +537,365 @@ function advanceGameweek() {
 }
 
 /* ---------------------------
-   Render views
+   Add/remove from squad
    --------------------------- */
-function buildPitchCards() {
-  const starters = state.startingXI.map(id => getPlayerById(id)).filter(Boolean);
+function addToSquad(playerId) {
+  const player = getPlayerById(playerId);
+  if (!player) return;
 
-  const groups = { GK: [], DEF: [], MID: [], FWD: [] };
-  starters.forEach(p => groups[p.pos].push(p));
+  const check = canAddPlayer(player);
+  if (!check.allowed) {
+    showAlert(check.reason);
+    return;
+  }
 
-  const renderPlayer = (player) => `
-    <div class="player-card">
-      <div class="player-name">${escapeHtml(player.name)} ${state.captainId === player.id ? '(C)' : ''} ${state.viceCaptainId === player.id ? '(VC)' : ''}</div>
-      <div class="player-meta">${escapeHtml(player.pos)} • ${escapeHtml(player.club)}</div>
-    </div>
-  `;
-
-  const fillEmpty = (count) => Array.from({ length: count }, () => '<div class="player-card empty">Empty</div>').join('');
-
-  const gkRendered = groups.GK.length ? groups.GK.map(renderPlayer).join('') : fillEmpty(1);
-  const defRendered = groups.DEF.length ? groups.DEF.map(renderPlayer).join('') : fillEmpty(3);
-  const midRendered = groups.MID.length ? groups.MID.map(renderPlayer).join('') : fillEmpty(4);
-  const fwdRendered = groups.FWD.length ? groups.FWD.map(renderPlayer).join('') : fillEmpty(3);
-
-  return `
-    <div class="pitch">
-      <div class="pitch-row">${gkRendered}</div>
-      <div class="pitch-row">${defRendered}</div>
-      <div class="pitch-row">${midRendered}</div>
-      <div class="pitch-row">${fwdRendered}</div>
-
-      <div class="bench-wrap">
-        <div class="bench-title">Bench</div>
-        <div class="bench-list">
-          ${state.bench.length ? state.bench.map(id => {
-            const p = getPlayerById(id);
-            return `<div class="bench-player">${escapeHtml(p.name)} • ${escapeHtml(p.pos)}</div>`;
-          }).join('') : '<div style="color:rgba(255,255,255,0.6);font-size:0.74rem;">No bench players</div>'}
-        </div>
-      </div>
-    </div>
-  `;
+  state.squad.push(player.id);
+  state.purchasePrices[player.id] = player.price;
+  recalculateBank();
+  autoAssignXIAndBench();
+  saveState();
+  renderApp();
 }
 
-function renderSquadView() {
-  const summary = {
-    counts: getSquadCounts(),
-    squadValue: computeSquadValue(state.squad)
+function removeFromSquad(playerId) {
+  if (!state.squad.includes(playerId)) return;
+
+  state.squad = state.squad.filter(id => id !== playerId);
+  delete state.purchasePrices[playerId];
+
+  if (state.captainId === playerId) state.captainId = null;
+  if (state.viceCaptainId === playerId) state.viceCaptainId = null;
+
+  autoAssignXIAndBench();
+  recalculateBank();
+  saveState();
+  renderApp();
+}
+
+/* ---------------------------
+   Transfer market and pending transfers
+   --------------------------- */
+function stageBuy(playerId) {
+  if (state.pendingTransfers.find(t => t.type === 'buy' && t.playerId === playerId)) {
+    showAlert('This buy is already pending.');
+    return;
+  }
+  state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'buy', playerId, ts: Date.now(), removing: false });
+  renderApp();
+}
+
+function stageSell(playerId) {
+  if (!state.squad.includes(playerId)) {
+    showAlert('Player not in squad.');
+    return;
+  }
+  if (state.pendingTransfers.find(t => t.type === 'sell' && t.playerId === playerId)) {
+    showAlert('This sell is already pending.');
+    return;
+  }
+  state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'sell', playerId, ts: Date.now(), removing: false });
+  renderApp();
+}
+
+function removePendingByIdAnimated(id) {
+  const idx = state.pendingTransfers.findIndex(t => t.id === id);
+  if (idx === -1) return;
+
+  state.pendingTransfers[idx].removing = true;
+  renderApp();
+
+  setTimeout(() => {
+    state.pendingTransfers = state.pendingTransfers.filter(t => t.id !== id);
+    renderApp();
+  }, 260);
+}
+
+function clearPendingTransfers() {
+  if (!state.pendingTransfers.length) return;
+  showConfirm('Clear all pending transfers?', () => {
+    state.pendingTransfers.forEach(t => t.removing = true);
+    renderApp();
+
+    setTimeout(() => {
+      state.pendingTransfers = [];
+      renderApp();
+    }, 260);
+  });
+}
+
+function calculatePendingPreview(extra = null) {
+  const staged = [...state.pendingTransfers];
+  if (extra) staged.push({ id: 'hyp', type: extra.type, playerId: extra.playerId });
+
+  let futureSquad = [...state.squad];
+  staged.filter(t => t.type === 'sell').forEach(t => {
+    futureSquad = futureSquad.filter(id => id !== t.playerId);
+  });
+  staged.filter(t => t.type === 'buy').forEach(t => {
+    if (!futureSquad.includes(t.playerId)) futureSquad.push(t.playerId);
+  });
+
+  const buys = staged.filter(t => t.type === 'buy').map(t => getPlayerById(t.playerId)).filter(Boolean);
+  const sells = staged.filter(t => t.type === 'sell').map(t => getPlayerById(t.playerId)).filter(Boolean);
+
+  const sumBuys = buys.reduce((sum, p) => sum + p.price, 0);
+  const sumSells = sells.reduce((sum, p) => sum + getSellingPrice(p), 0);
+
+  let projectedBank = state.bank - sumBuys + sumSells;
+
+  const pendingCount = staged.length;
+  const usingWildcard = state.activeChip === 'wildcard';
+  const usingFreeHit = state.activeChip === 'freeHit';
+  let projectedTransfersMade = state.transfersMadeThisGW + pendingCount;
+  let extraTransfers = 0;
+  if (!usingWildcard && !usingFreeHit) {
+    extraTransfers = Math.max(0, projectedTransfersMade - state.freeTransfers);
+  }
+
+  return {
+    projectedBank: parseFloat(projectedBank.toFixed(1)),
+    projectedHits: extraTransfers * HIT_PENALTY,
+    transfersApplied: pendingCount,
+    projectedSquadValue: parseFloat(computeSquadValue(futureSquad).toFixed(1)),
+    projectedClubCounts: computeClubCounts(futureSquad),
+    buys,
+    sells
   };
-
-  const selectedPlayers = state.squad.map(id => getPlayerById(id)).filter(Boolean);
-
-  const squadGrid = selectedPlayers.length ? selectedPlayers.map(player => `
-    <div class="selected-player-card">
-      <div class="selected-player-top">
-        <div>
-          <div style="font-weight:700;">${escapeHtml(player.name)}</div>
-          <div style="color:#a7b8d0;font-size:12px;">${escapeHtml(player.pos)} • ${escapeHtml(player.club)}</div>
-        </div>
-        <span class="pill">${player.price}M</span>
-      </div>
-
-      <div class="selected-player-actions">
-        <button class="btn btn-ghost captain-btn" data-id="${player.id}" ${state.captainId === player.id ? 'disabled' : ''}>Captain</button>
-        <button class="btn btn-ghost vice-btn" data-id="${player.id}" ${state.viceCaptainId === player.id ? 'disabled' : ''}>Vice</button>
-        <button class="btn btn-danger remove-squad-btn" data-id="${player.id}">Remove</button>
-      </div>
-    </div>
-  `).join('') : '<div style="color:#a7b8d0;">No players selected yet.</div>';
-
-  return `
-    <div class="dashboard">
-      <div class="pitch-panel">
-        <div class="chip-strip">
-          ${CHIPS.map(chip => {
-            const active = state.activeChip === chip;
-            const used = state.usedChipsThisSeason.includes(chip);
-            return `<button class="chip-btn ${active ? 'active' : ''}" data-chip="${chip}" ${used ? 'disabled' : ''}>${chip}${used ? ' (used)' : ''}${active ? ' (active)' : ''}</button>`;
-          }).join('')}
-        </div>
-
-        ${buildPitchCards()}
-      </div>
-
-      <aside class="side-stack">
-        <div class="panel">
-          <h3 class="card-title">Squad Summary</h3>
-          <div class="summary-box">
-            <div class="summary-row"><span>Squad Value</span><strong>Br ${summary.squadValue.toFixed(1)}M</strong></div>
-            <div class="summary-row"><span>Bank</span><strong>Br ${state.bank.toFixed(1)}M</strong></div>
-            <div class="summary-row"><span>Players</span><strong>${state.squad.length}/15</strong></div>
-            <div class="summary-row"><span>Free slots</span><strong>${MAX_SQUAD_SIZE - state.squad.length}</strong></div>
-          </div>
-
-          <div class="summary-box" style="margin-top:10px;">
-            <div class="summary-row"><span>GK</span><strong>${summary.counts.GK}/2</strong></div>
-            <div class="summary-row"><span>DEF</span><strong>${summary.counts.DEF}/5</strong></div>
-            <div class="summary-row"><span>MID</span><strong>${summary.counts.MID}/5</strong></div>
-            <div class="summary-row"><span>FWD</span><strong>${summary.counts.FWD}/3</strong></div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h3 class="card-title">Your Squad</h3>
-          <div class="squad-grid">${squadGrid}</div>
-        </div>
-      </aside>
-    </div>
-  `;
 }
 
+function applyPendingTransfers() {
+  if (!state.pendingTransfers.length) {
+    showAlert('No pending transfers to apply.');
+    return;
+  }
+
+  const usingWildcard = state.activeChip === 'wildcard';
+  const usingFreeHit = state.activeChip === 'freeHit';
+  let applied = 0;
+
+  const sells = state.pendingTransfers.filter(t => t.type === 'sell');
+  for (const t of sells) {
+    const p = getPlayerById(t.playerId);
+    if (!p || !state.squad.includes(p.id)) continue;
+
+    const soldFor = getSellingPrice(p);
+    state.squad = state.squad.filter(id => id !== p.id);
+    delete state.purchasePrices[p.id];
+    state.bank = parseFloat((state.bank + soldFor).toFixed(1));
+    applied++;
+  }
+
+  const buys = state.pendingTransfers.filter(t => t.type === 'buy');
+  for (const t of buys) {
+    const p = getPlayerById(t.playerId);
+    if (!p) continue;
+
+    const check = canAddPlayer(p);
+    if (!check.allowed) {
+      showAlert(`Cannot buy ${p.name}: ${check.reason}`);
+      continue;
+    }
+
+    state.squad.push(p.id);
+    state.purchasePrices[p.id] = p.price;
+    state.bank = parseFloat((state.bank - p.price).toFixed(1));
+    applied++;
+  }
+
+  if (!usingWildcard && !usingFreeHit) {
+    state.transfersMadeThisGW += applied;
+  }
+
+  state.lastTransferConfirmed = applied > 0;
+  state.pendingTransfers = [];
+  recalculateBank();
+  updateTransferPenalty();
+  autoAssignXIAndBench();
+  saveState();
+  renderApp();
+  showAlert(`Confirmed ${applied} transfer(s).`);
+}
+
+function showTransferBreakdownModal(extra = null) {
+  const preview = calculatePendingPreview(extra);
+  const lines = [];
+  preview.sells.forEach(p => lines.push({ type: 'Sell', name: p.name, price: getSellingPrice(p), sign: '+' }));
+  preview.buys.forEach(p => lines.push({ type: 'Buy', name: p.name, price: p.price, sign: '-' }));
+
+  const htmlLines = lines.length === 0
+    ? '<div>(no transfers)</div>'
+    : lines.map(line => `
+      <div class="transfer-line">
+        <div class="transfer-left">
+          <span class="badge">${escapeHtml(line.type)}</span>
+          <span>${escapeHtml(line.name)}</span>
+        </div>
+        <span class="price-badge">${line.sign} Br ${line.price}M</span>
+      </div>
+    `).join('');
+
+  const clubCountsHtml = Object.keys(preview.projectedClubCounts).map(club => {
+    const n = preview.projectedClubCounts[club];
+    const over = n > MAX_PER_CLUB;
+    return `
+      <div style="display:flex;justify-content:space-between;padding:4px 0;">
+        <span>${escapeHtml(club)}</span>
+        <span style="color:${over ? '#ff8a80' : '#edf4ff'}">${n}${over ? ' ⚠︎' : ''}</span>
+      </div>
+    `;
+  }).join('');
+
+  const totals = `
+    <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px;">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Bank</span><strong>Br ${preview.projectedBank}M</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Squad Value</span><strong>Br ${preview.projectedSquadValue}M</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Projected Hits</span><strong>-${preview.projectedHits} pts</strong></div>
+      <div style="margin-top:8px;"><div style="font-weight:700;margin-bottom:4px;">Club counts</div>${clubCountsHtml}</div>
+    </div>
+  `;
+
+  showModal('Transfer Cost Breakdown', `<div>${htmlLines}${totals}</div>`, extra ? 'Stage & Confirm' : 'Confirm Transfers', () => {
+    if (extra) {
+      state.pendingTransfers.push({ id: Date.now(), type: extra.type, playerId: extra.playerId, ts: Date.now() });
+    }
+    applyPendingTransfers();
+  }, null, false);
+}
+
+/* ---------------------------
+   Replacement suggestions
+   --------------------------- */
+function findReplacementCandidates(targetPlayerId) {
+  const target = getPlayerById(targetPlayerId);
+  if (!target) return { direct: [], swapProposals: [] };
+
+  const direct = INITIAL_PLAYERS.filter(p => !state.squad.includes(p.id) && p.pos === target.pos && p.id !== targetPlayerId)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 8);
+
+  const sellCandidates = state.squad
+    .map(id => getPlayerById(id))
+    .filter(Boolean)
+    .filter(p => p.pos === target.pos)
+    .sort((a, b) => a.points - b.points)
+    .slice(0, 8);
+
+  const swapProposals = [];
+  direct.forEach(dc => {
+    const affordable = canAddPlayer(dc).allowed;
+    if (affordable) {
+      swapProposals.push({ buy: dc, sell: null, reason: 'Affordable' });
+    } else {
+      for (const sc of sellCandidates) {
+        const tempBank = state.bank + getSellingPrice(sc);
+        if (tempBank >= dc.price) {
+          swapProposals.push({ buy: dc, sell: sc, reason: `Sell ${sc.name} to afford` });
+          break;
+        }
+      }
+    }
+  });
+
+  return { direct, swapProposals };
+}
+
+function showReplacementModal(targetPlayerId) {
+  const target = getPlayerById(targetPlayerId);
+  if (!target) return;
+
+  const { direct, swapProposals } = findReplacementCandidates(targetPlayerId);
+
+  const directHtml = direct.length === 0
+    ? '<div style="color:#a7b8d0;">No direct candidates found.</div>'
+    : direct.map(player => {
+      const affordable = canAddPlayer(player).allowed;
+      return `
+        <div class="transfer-line">
+          <div class="transfer-left">
+            <span class="badge">${escapeHtml(player.pos)}</span>
+            <div>
+              <div style="font-weight:700;">${escapeHtml(player.name)}</div>
+              <div style="font-size:12px;color:#a7b8d0;">${escapeHtml(player.club)} • Br ${player.price}M</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost preview-single" data-id="${player.id}">Preview</button>
+            <button class="btn btn-primary stage-swap" data-buy="${player.id}" data-sell="${targetPlayerId}" ${affordable ? '' : 'disabled'}>Stage swap</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  const swapHtml = swapProposals.length === 0
+    ? '<div style="color:#a7b8d0;">No swap suggestions found.</div>'
+    : swapProposals.map(item => {
+      const buy = item.buy;
+      const sell = item.sell;
+      return `
+        <div class="transfer-line">
+          <div class="transfer-left">
+            <span class="badge">Swap</span>
+            <div>
+              <div style="font-weight:700;">${escapeHtml(buy.name)}</div>
+              <div style="font-size:12px;color:#a7b8d0;">${sell ? `Sells: ${escapeHtml(sell.name)} • ` : ''}Br ${buy.price}M</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost preview-single" data-id="${buy.id}">Preview</button>
+            <button class="btn btn-primary stage-swap" data-buy="${buy.id}" data-sell="${sell ? sell.id : targetPlayerId}">Stage swap</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  showModal(`Replacement suggestions for ${escapeHtml(target.name)}`, `
+    <div>
+      <h4>Direct candidates</h4>
+      ${directHtml}
+      <h4 style="margin-top:18px;">Swap proposals</h4>
+      ${swapHtml}
+    </div>
+  `, 'Close', null, null, true);
+
+  setTimeout(() => {
+    document.querySelectorAll('.stage-swap').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const buyId = Number(e.currentTarget.dataset.buy);
+        const sellId = Number(e.currentTarget.dataset.sell);
+
+        state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'sell', playerId: sellId, ts: Date.now() });
+        state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'buy', playerId: buyId, ts: Date.now() });
+
+        saveState();
+        renderApp();
+        showAlert(`Staged swap: sell ${sellId} + buy ${buyId}`);
+      });
+    });
+
+    document.querySelectorAll('.preview-single').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = Number(e.currentTarget.dataset.id);
+        const extra = { type: state.squad.includes(id) ? 'sell' : 'buy', playerId: id };
+        showTransferBreakdownModal(extra);
+      });
+    });
+  }, 20);
+}
+
+/* ---------------------------
+   Filtered players
+   --------------------------- */
 function getFilteredPlayers() {
   const q = (state.marketSearch || '').trim().toLowerCase();
+
   return INITIAL_PLAYERS.filter(player => {
     const matchesPos = state.marketFilter === 'All' || player.pos === state.marketFilter;
-    const matchesSearch = !q || player.name.toLowerCase().includes(q) || player.club.toLowerCase().includes(q) || player.pos.toLowerCase().includes(q);
+    const matchesSearch =
+      !q ||
+      player.name.toLowerCase().includes(q) ||
+      player.club.toLowerCase().includes(q) ||
+      player.pos.toLowerCase().includes(q);
+
     return matchesPos && matchesSearch;
   });
 }
@@ -1038,7 +911,7 @@ function renderTransfersView() {
     const preview = calculatePendingPreview({ type: inSquad ? 'sell' : 'buy', playerId: player.id });
     const clubCount = preview.projectedClubCounts[player.club] || 0;
     const overClub = clubCount > MAX_PER_CLUB;
-    const badge = pendingBuy ? '<span class=\"badge\">Pending Buy</span>' : pendingSell ? '<span class=\"badge\">Pending Sell</span>' : '<span class=\"badge\">Preview</span>';
+    const badge = pendingBuy ? '<span class="badge">Pending Buy</span>' : pendingSell ? '<span class=\"badge\">Pending Sell</span>' : '<span class=\"badge\">Preview</span>';
 
     return `
       <div class="market-item">
@@ -1155,50 +1028,6 @@ function renderRulesView() {
   `;
 }
 
-function renderWelcomeModal() {
-  if (state.hasSeenWelcome) return '';
-  return `
-    <div class="modal-overlay">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div class="modal-title">Welcome to EPL Fantasy</div>
-        </div>
-
-        <div class="modal-body">
-          <p style="margin:0 0 8px;">Build your team, manage your squad, and score points every Gameweek.</p>
-          <p style="margin:0;">Rules: 2 GK • 5 DEF • 5 MID • 3 FWD • Budget Br ${INITIAL_BUDGET}M • Max 3 per club</p>
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn btn-primary" id="welcome-close-btn">Start</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderApp() {
-  const root = document.getElementById('app');
-  if (!root) return;
-
-  let main = '';
-  if (state.activeTab === 'pick-team') main = renderSquadView();
-  else if (state.activeTab === 'transfers') main = renderTransfersView();
-  else if (state.activeTab === 'points') main = renderPointsView();
-  else main = renderRulesView();
-
-  root.innerHTML = `
-    <div class="app-shell">
-      ${renderWelcomeModal()}
-      ${renderHeader()}
-      ${renderTabs()}
-      <div class="content">${main}</div>
-    </div>
-  `;
-
-  attachEventListeners();
-}
-
 function renderHeader() {
   const squadValue = state.squad.reduce((sum, id) => {
     const p = getPlayerById(id);
@@ -1238,14 +1067,55 @@ function renderTabs() {
   `;
 }
 
-/* ---------------------------
-   Event handling
-   --------------------------- */
+function renderWelcomeModal() {
+  if (state.hasSeenWelcome) return '';
+  return `
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title">Welcome to EPL Fantasy</div>
+        </div>
+
+        <div class="modal-body">
+          <p style="margin:0 0 8px;">Build your squad, manage transfers and score points every Gameweek.</p>
+          <p style="margin:0;">Rules: 2 GK • 5 DEF • 5 MID • 3 FWD • Budget Br ${INITIAL_BUDGET}M • Max 3 per club</p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="welcome-close-btn">Start</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderApp() {
+  const root = document.getElementById('app');
+  if (!root) return;
+
+  let main = '';
+  if (state.activeTab === 'pick-team') main = renderSquadView();
+  else if (state.activeTab === 'transfers') main = renderTransfersView();
+  else if (state.activeTab === 'points') main = renderPointsView();
+  else main = renderRulesView();
+
+  root.innerHTML = `
+    <div class="app-shell">
+      ${renderWelcomeModal()}
+      ${renderHeader()}
+      ${renderTabs()}
+      <div class="content">${main}</div>
+    </div>
+  `;
+
+  attachEventListeners();
+}
+
 function attachEventListeners() {
   const app = document.getElementById('app');
   if (!app) return;
 
-  // Avoid duplicate listeners from re-render by using a single delegated click listener
+  // Use event delegation to avoid problems after re-render
   if (app.__clickHandler) app.removeEventListener('click', app.__clickHandler);
 
   const clickHandler = (e) => {
@@ -1260,7 +1130,10 @@ function attachEventListeners() {
     if (chipBtn && chipBtn.dataset.chip) {
       const chipName = chipBtn.dataset.chip;
       const ok = canActivateChip(chipName);
-      if (!ok.ok) { showAlert(ok.reason); return; }
+      if (!ok.ok) {
+        showAlert(ok.reason);
+        return;
+      }
 
       if (state.activeChip === chipName) {
         if (chipName === 'freeHit' && state.savedFreeHitSquad) {
@@ -1274,7 +1147,10 @@ function attachEventListeners() {
         return;
       }
 
-      if (chipName === 'freeHit') state.savedFreeHitSquad = [...state.squad];
+      if (chipName === 'freeHit') {
+        state.savedFreeHitSquad = [...state.squad];
+      }
+
       state.activeChip = chipName;
       saveState();
       renderApp();
@@ -1357,8 +1233,10 @@ function attachEventListeners() {
     if (stageSwapBtn && stageSwapBtn.dataset.buy && stageSwapBtn.dataset.sell) {
       const buyId = Number(stageSwapBtn.dataset.buy);
       const sellId = Number(stageSwapBtn.dataset.sell);
+
       state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'sell', playerId: sellId, ts: Date.now() });
       state.pendingTransfers.push({ id: ++pendingIdCounter, type: 'buy', playerId: buyId, ts: Date.now() });
+
       saveState();
       renderApp();
       showAlert(`Staged swap: sell ${sellId} + buy ${buyId}`);
@@ -1405,46 +1283,15 @@ function attachEventListeners() {
   app.__clickHandler = clickHandler;
   app.addEventListener('click', clickHandler);
 
+  if (app.__inputHandler) app.removeEventListener('input', app.__inputHandler);
   const inputHandler = (e) => {
     if (e.target && e.target.id === 'market-search') {
       state.marketSearch = e.target.value;
       renderApp();
     }
   };
-
-  if (app.__inputHandler) app.removeEventListener('input', app.__inputHandler);
   app.__inputHandler = inputHandler;
   app.addEventListener('input', inputHandler);
-}
-
-function addToSquad(playerId) {
-  const player = getPlayerById(playerId);
-  if (!player) return;
-
-  const check = canAddPlayer(player);
-  if (!check.allowed) {
-    showAlert(check.reason);
-    return;
-  }
-
-  state.squad.push(player.id);
-  state.purchasePrices[player.id] = player.price;
-  recalculateBank();
-  autoAssignXIAndBench();
-  saveState();
-  renderApp();
-}
-
-function removeFromSquad(playerId) {
-  if (!state.squad.includes(playerId)) return;
-  state.squad = state.squad.filter(id => id !== playerId);
-  delete state.purchasePrices[playerId];
-  if (state.captainId === playerId) state.captainId = null;
-  if (state.viceCaptainId === playerId) state.viceCaptainId = null;
-  autoAssignXIAndBench();
-  recalculateBank();
-  saveState();
-  renderApp();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
