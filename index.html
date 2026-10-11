@@ -3,40 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EPL Fantasy — Fresh Start</title>
+  <title>EPL Fantasy — Version 2</title>
   <style>
     :root{
       --bg:#071322;
       --bg2:#0a1930;
       --panel:#0f1d2d;
-      --panel2:#111d2d;
       --line: rgba(255,255,255,0.08);
       --text:#edf6ff;
-      --muted:#b0c6dd;
-      --accent:#5c3bb8;
-      --accent2:#7a5ce5;
-      --green1:#0b3d29;
-      --green2:#165b3a;
-      --danger:#d64646;
-      --shadow:0 18px 40px rgba(0,0,0,0.35);
+      --muted:#afc1d9;
+      --accent:#5f3db9;
+      --accent2:#7a5ce4;
+      --green1:#0d3a26;
+      --green2:#145a37;
+      --danger:#d54a4a;
+      --shadow:0 18px 40px rgba(0,0,0,0.4);
       --radius:14px;
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
     html,body{
       margin:0;
+      min-height:100%;
       background:linear-gradient(180deg,var(--bg),var(--bg2));
       color:var(--text);
       font-family:Inter,Segoe UI,Arial,sans-serif;
-      min-height:100%;
     }
 
     body{
-      padding:20px;
+      padding:18px;
     }
 
     #app{
-      max-width:1300px;
+      max-width:1320px;
       margin:0 auto;
     }
 
@@ -44,65 +43,65 @@
       background:rgba(255,255,255,0.02);
       border:1px solid var(--line);
       border-radius:18px;
-      overflow:hidden;
       box-shadow:var(--shadow);
+      overflow:hidden;
     }
 
     .topbar{
       background:linear-gradient(90deg,var(--accent),var(--accent2));
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:10px;
-      padding:14px 18px;
+      justify-content:space-between;
+      gap:12px;
       flex-wrap:wrap;
+      padding:14px 18px;
     }
 
     .brand{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:12px;
       font-weight:800;
       font-size:1.1rem;
     }
 
     .gw-pill{
-      background:rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.1);
       border:1px solid rgba(255,255,255,0.1);
       border-radius:999px;
       padding:6px 10px;
-      font-size:0.72rem;
+      font-size:0.7rem;
       font-weight:700;
     }
 
     .topstats{
       display:flex;
+      align-items:center;
       gap:8px;
       flex-wrap:wrap;
-      align-items:center;
     }
 
-    .stat{
+    .sticker{
       background:rgba(255,255,255,0.06);
       border:1px solid rgba(255,255,255,0.08);
       border-radius:8px;
       padding:7px 10px;
-      font-size:0.8rem;
+      font-size:0.76rem;
     }
 
     .tabs{
       display:flex;
       gap:8px;
-      padding:10px 18px 0;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,0.02);
       flex-wrap:wrap;
+      padding:10px 18px 0;
+      background:rgba(255,255,255,0.02);
+      border-bottom:1px solid var(--line);
     }
 
     .tab-btn{
       padding:10px 14px;
-      border-radius:10px 10px 0 0;
       border:1px solid rgba(255,255,255,0.05);
+      border-radius:10px 10px 0 0;
       background:transparent;
       color:var(--muted);
       cursor:pointer;
@@ -112,7 +111,6 @@
     .tab-btn.active{
       background:rgba(255,255,255,0.03);
       color:var(--text);
-      border-color:rgba(255,255,255,0.08);
     }
 
     .content{
@@ -121,8 +119,9 @@
 
     .layout{
       display:grid;
-      grid-template-columns: minmax(0,1.7fr) minmax(300px,420px);
+      grid-template-columns:minmax(0,1.7fr) minmax(300px,420px);
       gap:18px;
+      align-items:start;
     }
 
     .panel{
@@ -136,80 +135,6 @@
       margin:0 0 12px;
       font-size:1rem;
       font-weight:700;
-    }
-
-    .pitch-wrap{
-      background:linear-gradient(180deg,var(--green1),var(--green2));
-      border-radius:12px;
-      min-height:440px;
-      padding:14px;
-      border:1px solid rgba(255,255,255,0.04);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .pitch-wrap:before{
-      content:"";
-      position:absolute;
-      inset:14px;
-      border:1px solid rgba(255,255,255,0.05);
-      border-radius:10px;
-      pointer-events:none;
-    }
-
-    .pitch-wrap:after{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:10%;
-      bottom:10%;
-      width:2px;
-      background:rgba(255,255,255,0.06);
-      transform:translateX(-50%);
-      pointer-events:none;
-    }
-
-    .pitch-row{
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-      position:relative;
-      z-index:2;
-      margin-bottom:10px;
-    }
-
-    .player-card{
-      width:140px;
-      min-height:96px;
-      border-radius:10px;
-      background:rgba(10,17,27,0.35);
-      border:1px solid rgba(255,255,255,0.06);
-      box-shadow:0 12px 20px rgba(0,0,0,0.18);
-      padding:8px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-
-    .player-card.empty{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:rgba(255,255,255,0.38);
-      border-style:dashed;
-      background:rgba(255,255,255,0.02);
-    }
-
-    .player-name{
-      font-size:0.82rem;
-      font-weight:700;
-      line-height:1.3;
-    }
-
-    .player-meta{
-      font-size:0.72rem;
-      color:var(--muted);
     }
 
     .chip-strip{
@@ -235,32 +160,134 @@
       font-weight:700;
     }
 
-    .bench{
-      margin-top:12px;
-      padding-top:10px;
-      border-top:1px solid rgba(255,255,255,0.05);
+    .pitch-wrap{
+      background:linear-gradient(180deg,var(--green1),var(--green2));
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.05);
+      min-height:430px;
+      padding:14px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pitch-wrap::before{
+      content:"";
+      position:absolute;
+      inset:12px;
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:8px;
+      pointer-events:none;
+    }
+
+    .pitch-wrap::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:10%;
+      bottom:10%;
+      width:2px;
+      background:rgba(255,255,255,0.06);
+      transform:translateX(-50%);
+      pointer-events:none;
+    }
+
+    .pitch-row{
       display:flex;
-      gap:8px;
+      justify-content:center;
+      gap:10px;
       flex-wrap:wrap;
       position:relative;
-      z-index:2;
+      z-index:1;
+      margin-bottom:10px;
+    }
+
+    .player-card{
+      width:146px;
+      min-height:96px;
+      border-radius:10px;
+      padding:8px;
+      background:rgba(10,17,27,0.38);
+      border:1px solid rgba(255,255,255,0.06);
+      box-shadow:0 12px 20px rgba(0,0,0,0.18);
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .player-card.empty{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(255,255,255,0.35);
+      background:rgba(255,255,255,0.02);
+      border-style:dashed;
+    }
+
+    .player-name{
+      font-size:0.83rem;
+      font-weight:700;
+      line-height:1.25;
+    }
+
+    .player-meta{
+      font-size:0.72rem;
+      color:var(--muted);
+    }
+
+    .player-actions{
+      display:flex;
+      gap:4px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+
+    .button{
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.02);
+      color:var(--text);
+      padding:6px 8px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:0.72rem;
+    }
+
+    .button.primary{
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      border:none;
+      box-shadow:0 10px 18px rgba(102,77,190,0.3);
+    }
+
+    .button.danger{
+      background:linear-gradient(90deg,#d65252,#b82d2d);
+      border:none;
+    }
+
+    .bench{
+      margin-top:14px;
+      padding-top:12px;
+      border-top:1px solid rgba(255,255,255,0.05);
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      position:relative;
+      z-index:1;
     }
 
     .bench-player{
-      border:1px solid rgba(255,255,255,0.06);
       background:rgba(255,255,255,0.02);
-      padding:6px 8px;
+      border:1px solid rgba(255,255,255,0.05);
       border-radius:8px;
+      padding:6px 8px;
       font-size:0.72rem;
     }
 
     .summary-row{
       display:flex;
       justify-content:space-between;
-      gap:10px;
-      color:var(--muted);
-      font-size:0.82rem;
+      align-items:center;
       padding:6px 0;
+      color:var(--muted);
+      font-size:0.8rem;
     }
 
     .summary-row strong{
@@ -278,30 +305,6 @@
       border:1px solid rgba(255,255,255,0.05);
       border-radius:10px;
       padding:10px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .button{
-      background:rgba(255,255,255,0.02);
-      border:1px solid rgba(255,255,255,0.07);
-      color:var(--text);
-      padding:7px 10px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:0.78rem;
-    }
-
-    .button.primary{
-      background:linear-gradient(90deg,var(--accent),var(--accent2));
-      border:none;
-      box-shadow:0 10px 20px rgba(92,59,184,0.26);
-    }
-
-    .button.danger{
-      background:linear-gradient(90deg,#d63d3d,#b62828);
-      border:none;
     }
 
     .search-row{
@@ -314,12 +317,27 @@
 
     .search{
       flex:1;
-      min-width:200px;
+      min-width:180px;
       padding:9px 10px;
       border-radius:8px;
-      border:1px solid rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.07);
       background:rgba(255,255,255,0.02);
       color:var(--text);
+    }
+
+    .filter-btn{
+      padding:7px 10px;
+      border:1px solid rgba(255,255,255,0.05);
+      background:transparent;
+      color:var(--muted);
+      border-radius:8px;
+      cursor:pointer;
+    }
+
+    .filter-btn.active{
+      background:rgba(255,255,255,0.03);
+      color:var(--text);
+      font-weight:700;
     }
 
     .market-list{
@@ -331,14 +349,14 @@
     }
 
     .market-item{
-      background:rgba(255,255,255,0.02);
-      border:1px solid rgba(255,255,255,0.04);
-      border-radius:10px;
-      padding:10px;
       display:flex;
       justify-content:space-between;
-      gap:8px;
       align-items:center;
+      gap:10px;
+      padding:10px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.04);
       flex-wrap:wrap;
     }
 
@@ -346,7 +364,6 @@
       display:flex;
       align-items:center;
       gap:10px;
-      min-width:0;
     }
 
     .avatar{
@@ -361,15 +378,21 @@
       flex-shrink:0;
     }
 
+    .pending-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
     .pending-item{
-      background:rgba(255,255,255,0.02);
-      border:1px solid rgba(255,255,255,0.04);
-      border-radius:9px;
-      padding:8px 10px;
       display:flex;
       justify-content:space-between;
-      gap:10px;
       align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:rgba(255,255,255,0.02);
     }
 
     .modal-overlay{
@@ -379,17 +402,17 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:99;
+      z-index:50;
       padding:18px;
     }
 
     .modal{
-      background:linear-gradient(180deg,#0c1420,#081321);
-      border-radius:12px;
+      background:linear-gradient(180deg,#0c1420,#071321);
       border:1px solid rgba(255,255,255,0.06);
+      border-radius:12px;
+      box-shadow:0 25px 50px rgba(0,0,0,0.45);
       width:min(760px,100%);
       padding:14px;
-      box-shadow:0 25px 50px rgba(0,0,0,0.45);
     }
 
     .modal-head{
@@ -400,20 +423,27 @@
     }
 
     .modal-body{
-      max-height:70vh;
+      max-height:72vh;
       overflow:auto;
       padding-right:4px;
+    }
+
+    .modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:12px;
     }
 
     textarea{
       width:100%;
       min-height:150px;
+      resize:vertical;
       border-radius:10px;
-      border:1px solid rgba(255,255,255,0.08);
+      padding:10px;
+      border:1px solid rgba(255,255,255,0.05);
       background:rgba(255,255,255,0.02);
       color:var(--text);
-      padding:10px;
-      resize:vertical;
     }
 
     @media (max-width:980px){
@@ -446,11 +476,12 @@
       { id:16, name:"Chernet Gugsa", pos:"FWD", club:"St. George", price:6.0, points:45, bio:"Pacy forward." }
     ];
 
-    const STORAGE_KEY = 'fresh_fpl_v1';
-    const BUDGET = 100.0;
+    const SQUAD_RULES = { GK:2, DEF:5, MID:5, FWD:3 };
     const MAX_SQUAD = 15;
     const MAX_CLUB = 3;
+    const BUDGET = 100.0;
     const HIT_COST = 4;
+    const STORAGE_KEY = 'epl_version2_state';
 
     const defaultState = {
       activeTab: 'pick-team',
@@ -463,10 +494,10 @@
       history: [],
       seenWelcome: false,
       gameweek: 1,
-      bank: BUDGET,
       transferPenalty: 0,
       freeTransfers: 1,
-      transfersMade: 0
+      transfersMade: 0,
+      activeChip: null
     };
 
     const state = loadState();
@@ -475,7 +506,8 @@
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(!raw) return JSON.parse(JSON.stringify(defaultState));
-        return Object.assign({}, defaultState, JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        return Object.assign({}, defaultState, parsed);
       }catch{
         return JSON.parse(JSON.stringify(defaultState));
       }
@@ -492,12 +524,7 @@
     }
 
     function esc(str=''){
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#39;');
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
     function computeSquadValue(arr){
@@ -509,24 +536,41 @@
       return total;
     }
 
-    function buildStartingXI(squad = state.squad){
-      const team = squad.map(playerById).filter(Boolean);
+    function getSquadCounts(){
+      const counts = { GK:0, DEF:0, MID:0, FWD:0 };
+      state.squad.forEach(id => {
+        const p = playerById(id);
+        if (p) counts[p.pos] += 1;
+      });
+      return counts;
+    }
+
+    function setBankAndPenalty(){
+      state.bank = Number((BUDGET - computeSquadValue(state.squad)).toFixed(1));
+      const excess = Math.max(0, state.transfersMade - state.freeTransfers);
+      state.transferPenalty = excess * HIT_COST;
+    }
+
+    function buildStartingXI(){
+      const team = state.squad.map(playerById).filter(Boolean);
       if (!team.length) return [];
-      const gk = team.filter(p => p.pos === 'GK').sort((a,b)=>b.points-a.points);
-      const def = team.filter(p => p.pos === 'DEF').sort((a,b)=>b.points-a.points);
-      const mid = team.filter(p => p.pos === 'MID').sort((a,b)=>b.points-a.points);
-      const fwd = team.filter(p => p.pos === 'FWD').sort((a,b)=>b.points-a.points);
+
+      const gk = team.filter(p => p.pos === 'GK').sort((a,b) => b.points - a.points);
+      const def = team.filter(p => p.pos === 'DEF').sort((a,b) => b.points - a.points);
+      const mid = team.filter(p => p.pos === 'MID').sort((a,b) => b.points - a.points);
+      const fwd = team.filter(p => p.pos === 'FWD').sort((a,b) => b.points - a.points);
 
       const formations = [
-        {def:3, mid:4, fwd:3},
-        {def:3, mid:5, fwd:2},
-        {def:4, mid:4, fwd:2},
-        {def:4, mid:3, fwd:3},
-        {def:5, mid:3, fwd:2},
-        {def:5, mid:4, fwd:1}
+        { def:3, mid:4, fwd:3 },
+        { def:3, mid:5, fwd:2 },
+        { def:4, mid:4, fwd:2 },
+        { def:4, mid:3, fwd:3 },
+        { def:5, mid:3, fwd:2 },
+        { def:5, mid:4, fwd:1 }
       ];
 
       let best = { total:-Infinity, starters:[] };
+
       formations.forEach(form => {
         if (def.length < form.def || mid.length < form.mid || fwd.length < form.fwd) return;
         const starters = [gk[0], ...def.slice(0, form.def), ...mid.slice(0, form.mid), ...fwd.slice(0, form.fwd)];
@@ -536,41 +580,30 @@
       });
 
       if (best.total === -Infinity){
-        const outfield = team.filter(p=>p.pos!=='GK').sort((a,b)=>b.points-a.points);
+        const outfield = team.filter(p => p.pos !== 'GK').sort((a,b) => b.points - a.points);
         return [gk[0].id, ...outfield.slice(0,10).map(p=>p.id)];
       }
 
       return best.starters;
     }
 
-    function getSquadCounts(){
-      const counts = { GK:0, DEF:0, MID:0, FWD:0 };
-      state.squad.forEach(id => {
-        const p = playerById(id);
-        if (p) counts[p.pos]++;
-      });
-      return counts;
-    }
-
-    function canAddPlayer(p){
-      if (state.squad.includes(p.id)) return { allowed:false, reason:'Already in squad' };
+    function canAddPlayer(player){
+      if (state.squad.includes(player.id)) return { allowed:false, reason:'Already in squad' };
       if (state.squad.length >= MAX_SQUAD) return { allowed:false, reason:'Squad full' };
-      if (state.bank < p.price) return { allowed:false, reason:'Not enough budget' };
+      if (state.bank < player.price) return { allowed:false, reason:'Not enough budget' };
 
-      const currentPos = state.squad.filter(id => playerById(id).pos === p.pos).length;
-      if (currentPos >= SQUAD_RULES[p.pos]) return { allowed:false, reason:`Max ${SQUAD_RULES[p.pos]} ${p.pos}` };
+      const samePos = state.squad.filter(id => playerById(id).pos === player.pos).length;
+      if (samePos >= SQUAD_RULES[player.pos]) return { allowed:false, reason:`Max ${SQUAD_RULES[player.pos]} ${player.pos}` };
 
-      const sameClub = state.squad.filter(id => playerById(id).club === p.club).length;
-      if (sameClub >= MAX_CLUB) return { allowed:false, reason:`Max ${MAX_CLUB} from ${p.club}` };
+      const sameClub = state.squad.filter(id => playerById(id).club === player.club).length;
+      if (sameClub >= MAX_CLUB) return { allowed:false, reason:`Max ${MAX_CLUB} from ${player.club}` };
 
       return { allowed:true };
     }
 
-    const SQUAD_RULES = { GK:2, DEF:5, MID:5, FWD:3 };
-
     function renderHeader(){
       const value = computeSquadValue(state.squad).toFixed(1);
-      const hits = state.transferPenalty ? `-${state.transferPenalty} pts` : '0 pts';
+
       return `
         <div class="topbar">
           <div class="brand">
@@ -578,11 +611,11 @@
             <span class="gw-pill">GW ${state.gameweek}</span>
           </div>
           <div class="topstats">
-            <div class="stat">Bank <strong>Br ${state.bank.toFixed(1)}M</strong></div>
-            <div class="stat">Value <strong>Br ${value}M</strong></div>
-            <div class="stat">Transfers <strong>${state.freeTransfers} FT</strong></div>
-            <div class="stat">Hits <strong>${hits}</strong></div>
-            <button id="finalize-gw" class="button primary">Finalize GW</button>
+            <div class="sticker">Bank <strong>Br ${state.bank.toFixed(1)}M</strong></div>
+            <div class="sticker">Value <strong>Br ${value}M</strong></div>
+            <div class="sticker">Transfers <strong>${state.freeTransfers} FT</strong></div>
+            <div class="sticker">Hits <strong>${state.transferPenalty > 0 ? '-' + state.transferPenalty + ' pts' : '0 pts'}</strong></div>
+            <button class="button primary" id="finalize-gw">Finalize GW</button>
           </div>
         </div>
       `;
@@ -599,57 +632,65 @@
       `;
     }
 
-    function renderPitchCards(starterIds){
+    function pitchCard(player){
+      return `
+        <div class="player-card">
+          <div class="player-name">${esc(player.name)}</div>
+          <div class="player-meta">${esc(player.pos)} • ${esc(player.club)}</div>
+          <div class="player-actions">
+            <button class="button" data-captain="${player.id}">Captain</button>
+            <button class="button" data-vice="${player.id}">Vice</button>
+            <button class="button" data-info="${player.id}">Info</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function emptyCards(count){
+      return Array.from({length:count}, () => `<div class="player-card empty">Empty</div>`).join('');
+    }
+
+    function renderPitch(){
+      const starters = buildStartingXI();
       const groups = { GK:[], DEF:[], MID:[], FWD:[] };
-      starterIds.map(id => playerById(id)).filter(Boolean).forEach(p => groups[p.pos].push(p));
+      starters.map(id => playerById(id)).filter(Boolean).forEach(p => groups[p.pos].push(p));
 
-      const cardHtml = (players, blanks) => {
-        if (players.length){
-          return players.map(p => `
-            <div class="player-card">
-              <div class="player-name">${esc(p.name)}</div>
-              <div class="player-meta">${esc(p.pos)} • ${esc(p.club)}</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="button" data-captain="${p.id}">Captain</button>
-                <button class="button" data-vice="${p.id}">Vice</button>
-                <button class="button" data-info="${p.id}">Info</button>
-              </div>
-            </div>
-          `).join('');
-        }
-        return Array.from({ length: blanks }, () => `<div class="player-card empty">Empty</div>`).join('');
-      };
-
-      const benchHtml = state.squad.filter(id => !starterIds.includes(id)).map(id => {
+      const benchPlayers = state.squad.filter(id => !starters.includes(id)).map(id => {
         const p = playerById(id);
         return `<div class="bench-player">${esc(p.name)} • ${esc(p.pos)}</div>`;
       }).join('') || '<div class="bench-player">No bench players</div>';
 
       return `
         <div class="pitch-wrap">
-          <div class="pitch-row">${cardHtml(groups.GK, 1)}</div>
-          <div class="pitch-row">${cardHtml(groups.DEF, 3)}</div>
-          <div class="pitch-row">${cardHtml(groups.MID, 4)}</div>
-          <div class="pitch-row">${cardHtml(groups.FWD, 3)}</div>
-          <div class="bench">${benchHtml}</div>
+          <div class="pitch-row">
+            ${groups.GK.length ? groups.GK.map(pitchCard).join('') : emptyCards(1)}
+          </div>
+          <div class="pitch-row">
+            ${groups.DEF.length ? groups.DEF.map(pitchCard).join('') : emptyCards(3)}
+          </div>
+          <div class="pitch-row">
+            ${groups.MID.length ? groups.MID.map(pitchCard).join('') : emptyCards(4)}
+          </div>
+          <div class="pitch-row">
+            ${groups.FWD.length ? groups.FWD.map(pitchCard).join('') : emptyCards(3)}
+          </div>
+          <div class="bench">${benchPlayers}</div>
         </div>
       `;
     }
 
     function renderSquadSummary(){
       const counts = getSquadCounts();
-      const value = computeSquadValue(state.squad).toFixed(1);
-
       return `
         <div class="panel">
           <h3 class="card-title">Squad Summary</h3>
-          <div class="summary-row"><span>Squad Value</span><strong>Br ${value}M</strong></div>
+          <div class="summary-row"><span>Squad Value</span><strong>Br ${computeSquadValue(state.squad).toFixed(1)}M</strong></div>
           <div class="summary-row"><span>Bank</span><strong>Br ${state.bank.toFixed(1)}M</strong></div>
           <div class="summary-row"><span>Players</span><strong>${state.squad.length}/15</strong></div>
           <div class="summary-row"><span>Free slots</span><strong>${MAX_SQUAD - state.squad.length}</strong></div>
           <div class="summary-row"><span>Captain</span><strong>${playerById(state.captainId)?.name || '-'}</strong></div>
           <div class="summary-row"><span>Vice</span><strong>${playerById(state.viceId)?.name || '-'}</strong></div>
-          <div style="margin-top:8px; border-top:1px solid var(--line); padding-top:8px;">
+          <div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;">
             <div class="summary-row"><span>GK</span><strong>${counts.GK}/2</strong></div>
             <div class="summary-row"><span>DEF</span><strong>${counts.DEF}/5</strong></div>
             <div class="summary-row"><span>MID</span><strong>${counts.MID}/5</strong></div>
@@ -659,17 +700,17 @@
       `;
     }
 
-    function renderSquadCards(){
+    function renderSquadGrid(){
       const cards = state.squad.map(id => {
         const p = playerById(id);
         return `
           <div class="squad-card">
             <div style="display:flex;justify-content:space-between;gap:8px;">
               <div>
-                <div style="font-weight:700">${esc(p.name)}</div>
-                <div style="color:var(--muted);font-size:0.78rem">${esc(p.pos)} • ${esc(p.club)}</div>
+                <div style="font-weight:700;">${esc(p.name)}</div>
+                <div style="color:var(--muted);font-size:0.75rem;">${esc(p.pos)} • ${esc(p.club)}</div>
               </div>
-              <div style="font-weight:700">${p.price}M</div>
+              <div style="font-weight:700;">${p.price}M</div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
               <button class="button" data-info="${p.id}">Details</button>
@@ -678,6 +719,7 @@
           </div>
         `;
       }).join('');
+
       return `
         <div class="panel">
           <h3 class="card-title">Your Squad</h3>
@@ -686,32 +728,33 @@
       `;
     }
 
-    function renderTransferMarket(){
-      const filtered = PLAYERS.filter(p => {
-        const q = state.marketSearch.toLowerCase().trim();
-        const posMatch = state.marketFilter === 'All' ? true : p.pos === state.marketFilter;
-        const searchMatch = !q || p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q) || p.pos.toLowerCase().includes(q);
-        return posMatch && searchMatch;
+    function renderTransfers(){
+      const filtered = PLAYERS.filter(player => {
+        const q = state.marketSearch.trim().toLowerCase();
+        const posOk = state.marketFilter === 'All' ? true : player.pos === state.marketFilter;
+        const searchOk = !q || player.name.toLowerCase().includes(q) || player.club.toLowerCase().includes(q) || player.pos.toLowerCase().includes(q);
+        return posOk && searchOk;
       });
 
-      const marketHtml = filtered.map(p => {
-        const inSquad = state.squad.includes(p.id);
+      const marketHtml = filtered.map(player => {
+        const inSquad = state.squad.includes(player.id);
         const action = inSquad
-          ? `<button class="button" data-stage-sell="${p.id}">Stage Sell</button>`
-          : `<button class="button primary" data-stage-buy="${p.id}">Stage Buy</button>`;
+          ? `<button class="button" data-stage-sell="${player.id}">Stage Sell</button>`
+          : `<button class="button primary" data-stage-buy="${player.id}">Stage Buy</button>`;
+
         return `
           <div class="market-item">
             <div class="market-left">
-              <div class="avatar">${esc(p.name.split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase())}</div>
+              <div class="avatar">${esc(player.name.split(' ').map(s => s[0]).slice(0,2).join(''))}</div>
               <div>
-                <div style="font-weight:700">${esc(p.name)}</div>
-                <div style="color:var(--muted);font-size:0.8rem">${esc(p.pos)} • ${esc(p.club)}</div>
+                <div style="font-weight:700">${esc(player.name)}</div>
+                <div style="color:var(--muted);font-size:0.8rem;">${esc(player.pos)} • ${esc(player.club)}</div>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <div style="font-weight:700">Br ${p.price}M</div>
+              <div style="font-weight:700;">Br ${player.price}M</div>
               ${action}
-              <button class="button" data-info="${p.id}">Info</button>
+              <button class="button" data-info="${player.id}">Info</button>
             </div>
           </div>
         `;
@@ -723,8 +766,8 @@
         return `
           <div class="pending-item">
             <div>
-              <div style="font-weight:700">${type} ${esc(p.name)}</div>
-              <div style="color:var(--muted);font-size:0.78rem">Br ${p.price}M</div>
+              <div style="font-weight:700;">${type} ${esc(p.name)}</div>
+              <div style="color:var(--muted);font-size:0.78rem;">Br ${p.price}M</div>
             </div>
             <button class="button" data-remove-pending="${item.id}">Undo</button>
           </div>
@@ -737,15 +780,18 @@
           <div class="search-row">
             <input id="market-search" class="search" value="${esc(state.marketSearch)}" placeholder="Search player, club or position" />
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              ${['All','GK','DEF','MID','FWD'].map(f => `<button class="filter-btn ${state.marketFilter===f?'active':''}" data-filter="${f}">${f}</button>`).join('')}
+              ${['All','GK','DEF','MID','FWD'].map(filter => `
+                <button class="filter-btn ${state.marketFilter === filter ? 'active' : ''}" data-filter="${filter}">${filter}</button>
+              `).join('')}
             </div>
           </div>
           <div class="market-list">${marketHtml}</div>
         </div>
-        <div class="panel" style="margin-top:12px">
+
+        <div class="panel" style="margin-top:12px;">
           <h3 class="card-title">Pending Transfers</h3>
           <div class="pending-list">${pendingHtml}</div>
-          <div style="display:flex;gap:8px;margin-top:12px;">
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
             <button id="confirm-transfers" class="button primary">Confirm Transfers</button>
             <button id="clear-pending" class="button">Clear Pending</button>
           </div>
@@ -753,18 +799,16 @@
       `;
     }
 
-    function renderPoints(){
-      const rows = state.history.map(item => `
-        <div style="padding:10px 0;border-bottom:1px solid var(--line);">
-          <div style="font-weight:700">GW ${item.gw}</div>
-          <div style="color:var(--muted);font-size:0.8rem;">Gross ${item.gross} • Hits -${item.hits} • Net ${item.net}</div>
-        </div>
-      `).join('');
-
+    function renderHistory(){
       return `
         <div class="panel">
           <h3 class="card-title">Gameweek History</h3>
-          ${rows || '<div style="color:var(--muted)">No finalised gameweeks yet.</div>'}
+          ${state.history.length ? state.history.map(item => `
+            <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+              <div style="font-weight:700;">GW ${item.gw}</div>
+              <div style="color:var(--muted);font-size:0.78rem;">Gross ${item.gross} • Hits -${item.hits} • Net ${item.net}</div>
+            </div>
+          `).join('') : '<div style="color:var(--muted)">No finalised gameweeks yet.</div>'}
         </div>
       `;
     }
@@ -773,12 +817,12 @@
       return `
         <div class="panel">
           <h3 class="card-title">Rules</h3>
-          <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.8;">
+          <ul style="margin:0;padding-left:18px;line-height:1.8;color:var(--muted);">
             <li>Build a 15-player squad: 2 GK, 5 DEF, 5 MID, 3 FWD</li>
             <li>Budget: Br ${BUDGET}M</li>
-            <li>Max 3 players from a club</li>
-            <li>One free transfer per gameweek. Extra transfers cost -4 points each.</li>
-            <li>Use your chip wisely: Wildcard, Free Hit, Triple Captain, Bench Boost</li>
+            <li>Max 3 players from any one club</li>
+            <li>1 free transfer per gameweek. Extra transfers cost -4 points each.</li>
+            <li>Wildcards, free hits, triple captain and bench boost are available as chips.</li>
           </ul>
         </div>
       `;
@@ -794,8 +838,8 @@
               <button class="button" data-close-welcome>Close</button>
             </div>
             <div class="modal-body">
-              <p style="margin:0 0 10px;color:var(--text)">Build your squad, make transfers, and manage your team through the season.</p>
-              <p style="margin:0;color:var(--muted)">Rules: 2 GK • 5 DEF • 5 MID • 3 FWD • Br ${BUDGET}M budget • Max 3 per club</p>
+              <p style="margin:0 0 10px;">Build your squad, manage transfers, and chase the season.</p>
+              <p style="margin:0;color:var(--muted);">Rules: 2 GK • 5 DEF • 5 MID • 3 FWD • Budget Br ${BUDGET}M</p>
             </div>
           </div>
         </div>
@@ -803,146 +847,230 @@
     }
 
     function render(){
-      const root = document.getElementById('app');
-      const starters = buildStartingXI();
-      const value = computeSquadValue(state.squad).toFixed(1);
-      state.bank = BUDGET - computeSquadValue(state.squad);
-      state.bank = Number(state.bank.toFixed(1));
+      setBankAndPenalty();
+      saveState();
 
-      let main = '';
+      const root = document.getElementById('app');
+      if (!root) return;
+
+      let content = '';
       if (state.activeTab === 'pick-team'){
-        main = `
+        const starters = buildStartingXI();
+        content = `
           <div class="layout">
             <div>
               <div class="panel">
                 <h3 class="card-title">My Team</h3>
-                ${renderPitchCards(starters)}
+                ${renderPitch()}
               </div>
               <div style="margin-top:12px;">
-                ${renderSquadCards()}
+                ${renderSquadGrid()}
               </div>
             </div>
-            <div>
-              ${renderSquadSummary()}
-            </div>
+            <div>${renderSquadSummary()}</div>
           </div>
         `;
       } else if (state.activeTab === 'transfers'){
-        main = `
+        content = `
           <div class="layout">
-            <div>${renderTransferMarket()}</div>
-            <div>
-              <div class="panel">
-                <h3 class="card-title">Quick Summary</h3>
-                <div class="summary-row"><span>Bank</span><strong>Br ${state.bank.toFixed(1)}M</strong></div>
-                <div class="summary-row"><span>Pending</span><strong>${state.pending.length}</strong></div>
-                <div class="summary-row"><span>Value</span><strong>Br ${value}M</strong></div>
-              </div>
+            <div>${renderTransfers()}</div>
+            <div class="panel">
+              <h3 class="card-title">Quick Summary</h3>
+              <div class="summary-row"><span>Bank</span><strong>Br ${state.bank.toFixed(1)}M</strong></div>
+              <div class="summary-row"><span>Pending</span><strong>${state.pending.length}</strong></div>
+              <div class="summary-row"><span>Transfers Made</span><strong>${state.transfersMade}</strong></div>
             </div>
           </div>
         `;
       } else if (state.activeTab === 'points'){
-        main = renderPoints();
+        content = renderHistory();
       } else {
-        main = renderRules();
+        content = renderRules();
       }
 
       root.innerHTML = `
         <div class="shell">
           ${renderHeader()}
           ${renderTabs()}
-          <div class="content">${main}</div>
+          <div class="content">${content}</div>
         </div>
         ${renderWelcome()}
       `;
     }
 
-    // Events
+    function openPlayerModal(id){
+      const player = playerById(id);
+      if (!player) return;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-head">
+            <strong>${esc(player.name)}</strong>
+            <button class="button" data-close-player>Close</button>
+          </div>
+          <div class="modal-body">
+            <div style="color:var(--muted);font-size:0.8rem;">${esc(player.pos)} • ${esc(player.club)}</div>
+            <div style="margin-top:10px;">${esc(player.bio)}</div>
+            <div style="margin-top:12px;">Price: Br ${player.price}M</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="button" data-stage-buy="${player.id}">Stage Buy</button>
+              <button class="button" data-stage-sell="${player.id}">Stage Sell</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (event) => {
+        if (event.target === overlay || event.target.closest('[data-close-player]')) {
+          overlay.remove();
+        }
+      });
+    }
+
+    function openFinaliseModal(){
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+
+      modal.innerHTML = `
+        <div class="modal">
+          <div class="modal-head">
+            <strong>Finalize Gameweek</strong>
+            <button class="button" data-close-finalize>Close</button>
+          </div>
+          <div class="modal-body">
+            <label style="display:block;margin-bottom:8px;color:var(--muted);">Paste JSON like {"1":{"minutes":90,"goals":1,"assists":1}}</label>
+            <textarea id="gw-json">{ "1": { "minutes": 90, "goals": 1 }, "9": { "minutes": 90, "assists": 1 } }</textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="button primary" id="run-finalize">Run Finalize</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('[data-close-finalize]')) {
+          modal.remove();
+        }
+      });
+
+      modal.querySelector('#run-finalize').addEventListener('click', () => {
+        try{
+          const raw = modal.querySelector('#gw-json').value;
+          const data = JSON.parse(raw);
+          let gross = 0;
+
+          for (const key in data){
+            const id = Number(key);
+            const p = playerById(id);
+            if (!p) continue;
+            const stats = data[key];
+            let points = 0;
+
+            if ((stats.minutes || 0) > 0) points += 1;
+            if ((stats.minutes || 0) >= 60) points += 2;
+
+            if ((stats.goals || 0) > 0){
+              if (p.pos === 'GK') points += 10 * (stats.goals || 0);
+              if (p.pos === 'DEF') points += 6 * (stats.goals || 0);
+              if (p.pos === 'MID') points += 5 * (stats.goals || 0);
+              if (p.pos === 'FWD') points += 4 * (stats.goals || 0);
+            }
+
+            if ((stats.assists || 0) > 0) points += 3 * (stats.assists || 0);
+            gross += points;
+          }
+
+          const hits = state.transferPenalty || 0;
+          const net = gross - hits;
+
+          state.history.push({ gw: state.gameweek, gross, hits, net });
+          state.gameweek += 1;
+          state.pending = [];
+          state.transferPenalty = 0;
+          state.transfersMade = 0;
+          saveState();
+          modal.remove();
+          render();
+          alert(`Gameweek finalized: Gross ${gross} • Hits -${hits} • Net ${net}`);
+        }catch{
+          alert('Invalid JSON. Use an object like {"1":{"minutes":90,"goals":1}}');
+        }
+      });
+    }
+
     document.addEventListener('click', (event) => {
-      const tab = event.target.closest('.tab-btn');
-      if (tab) {
-        state.activeTab = tab.dataset.tab;
+      const tabBtn = event.target.closest('.tab-btn');
+      if (tabBtn) {
+        state.activeTab = tabBtn.dataset.tab;
         render();
         return;
       }
 
-      if (event.target.closest('[data-close-welcome]')) {
+      const welcomeClose = event.target.closest('[data-close-welcome]');
+      if (welcomeClose) {
         state.seenWelcome = true;
         saveState();
         render();
         return;
       }
 
-      if (event.target.closest('[data-captain]')) {
-        const id = Number(event.target.closest('[data-captain]').dataset.captain);
+      const finaliseBtn = event.target.closest('#finalize-gw');
+      if (finaliseBtn) {
+        openFinaliseModal();
+        return;
+      }
+
+      const captainBtn = event.target.closest('[data-captain]');
+      if (captainBtn) {
+        const id = Number(captainBtn.dataset.captain);
         state.captainId = id;
         saveState();
         render();
         return;
       }
 
-      if (event.target.closest('[data-vice]')) {
-        const id = Number(event.target.closest('[data-vice]').dataset.vice);
+      const viceBtn = event.target.closest('[data-vice]');
+      if (viceBtn) {
+        const id = Number(viceBtn.dataset.vice);
         state.viceId = id;
         saveState();
         render();
         return;
       }
 
-      if (event.target.closest('[data-info]')) {
-        const id = Number(event.target.closest('[data-info]').dataset.info);
-        const p = playerById(id);
-        if (!p) return;
-
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-          <div class="modal">
-            <div class="modal-head">
-              <strong>${esc(p.name)}</strong>
-              <button class="button" data-close-modal>Close</button>
-            </div>
-            <div class="modal-body">
-              <div style="font-size:0.9rem;color:var(--muted)">${esc(p.pos)} • ${esc(p.club)}</div>
-              <div style="margin-top:12px;color:var(--muted)">${esc(p.bio)}</div>
-              <div style="margin-top:12px">Price: Br ${p.price}M</div>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(modal);
-
-        modal.addEventListener('click', (e) => {
-          const close = e.target.closest('[data-close-modal]');
-          if (close || e.target === modal) {
-            modal.remove();
-          }
-        });
+      const infoBtn = event.target.closest('[data-info]');
+      if (infoBtn) {
+        openPlayerModal(Number(infoBtn.dataset.info));
         return;
       }
 
-      if (event.target.closest('[data-stage-buy]')) {
-        const id = Number(event.target.closest('[data-stage-buy]').dataset.stageBuy);
-        const p = playerById(id);
-        if (!p) return;
-        if (state.squad.includes(id)) return;
-
-        const ok = canAddPlayer(p);
+      const stageBuyBtn = event.target.closest('[data-stage-buy]');
+      if (stageBuyBtn) {
+        const id = Number(stageBuyBtn.dataset.stageBuy);
+        const player = playerById(id);
+        if (!player) return;
+        const ok = canAddPlayer(player);
         if (!ok.allowed) {
           alert(ok.reason);
           return;
         }
-
         state.pending.push({ id: Date.now() + Math.random(), type:'buy', playerId:id });
         saveState();
         render();
         return;
       }
 
-      if (event.target.closest('[data-stage-sell]')) {
-        const id = Number(event.target.closest('[data-stage-sell]').dataset.stageSell);
+      const stageSellBtn = event.target.closest('[data-stage-sell]');
+      if (stageSellBtn) {
+        const id = Number(stageSellBtn.dataset.stageSell);
         if (!state.squad.includes(id)) return;
-
-        // prevent duplicate sell entries
         if (!state.pending.some(item => item.type === 'sell' && item.playerId === id)) {
           state.pending.push({ id: Date.now() + Math.random(), type:'sell', playerId:id });
         }
@@ -951,112 +1079,40 @@
         return;
       }
 
-      if (event.target.closest('[data-remove-pending]')) {
-        const id = Number(event.target.closest('[data-remove-pending]').dataset.removePending);
+      const removePendingBtn = event.target.closest('[data-remove-pending]');
+      if (removePendingBtn) {
+        const id = Number(removePendingBtn.dataset.removePending);
         state.pending = state.pending.filter(item => item.id !== id);
         saveState();
         render();
         return;
       }
 
-      if (event.target.id === 'clear-pending') {
-        state.pending = [];
-        saveState();
-        render();
-        return;
-      }
-
-      if (event.target.id === 'confirm-transfers') {
+      const confirmTransfersBtn = event.target.closest('#confirm-transfers');
+      if (confirmTransfersBtn) {
         const buys = state.pending.filter(item => item.type === 'buy').map(item => item.playerId);
         const sells = state.pending.filter(item => item.type === 'sell').map(item => item.playerId);
 
-        // remove sold players
         state.squad = state.squad.filter(id => !sells.includes(id));
 
-        // add bought players
         buys.forEach(id => {
-          const p = playerById(id);
-          if (!p) return;
-          if (!state.squad.includes(id) && state.squad.length < MAX_SQUAD) state.squad.push(id);
+          if (!state.squad.includes(id) && state.squad.length < MAX_SQUAD) {
+            state.squad.push(id);
+          }
         });
 
         state.pending = [];
-        state.bank = BUDGET - computeSquadValue(state.squad);
+        state.transfersMade += buys.length + sells.length;
         saveState();
         render();
         return;
       }
 
-      if (event.target.id === 'finalize-gw') {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-          <div class="modal">
-            <div class="modal-head">
-              <strong>Finalize Gameweek</strong>
-              <button class="button" data-close-modal>Close</button>
-            </div>
-            <div class="modal-body">
-              <label for="gw-json" style="display:block;margin-bottom:8px;color:var(--muted)">Paste JSON like {"1":{"minutes":90,"goals":1}}</label>
-              <textarea id="gw-json">{ "1": { "minutes": 90, "goals": 1 }, "9": { "minutes": 90, "assists": 1 } }</textarea>
-            </div>
-            <div class="modal-actions">
-              <button class="button primary" id="run-finalize">Run Finalize</button>
-            </div>
-          </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        modal.addEventListener('click', (e) => {
-          const close = e.target.closest('[data-close-modal]');
-          if (close || e.target === modal) {
-            modal.remove();
-          }
-        });
-
-        const runBtn = modal.querySelector('#run-finalize');
-        if (runBtn) {
-          runBtn.addEventListener('click', () => {
-            try{
-              const text = modal.querySelector('#gw-json').value;
-              const data = JSON.parse(text);
-              let gross = 0;
-              Object.keys(data).forEach(k => {
-                const id = Number(k);
-                const p = playerById(id);
-                if (!p) return;
-                const stats = data[k];
-                let points = 0;
-                points += (stats.minutes || 0) > 0 ? 1 : 0;
-                if ((stats.minutes || 0) >= 60) points += 2;
-                if ((stats.goals || 0) > 0) {
-                  if (p.pos === 'GK') points += 10 * (stats.goals || 0);
-                  else if (p.pos === 'DEF') points += 6 * (stats.goals || 0);
-                  else if (p.pos === 'MID') points += 5 * (stats.goals || 0);
-                  else points += 4 * (stats.goals || 0);
-                }
-                if ((stats.assists || 0) > 0) points += 3 * (stats.assists || 0);
-                gross += points;
-              });
-
-              const hits = state.transferPenalty || 0;
-              const net = gross - hits;
-
-              state.history.push({ gw: state.gameweek, gross, hits, net });
-              state.gameweek += 1;
-              state.transferPenalty = 0;
-              state.pending = [];
-              saveState();
-              modal.remove();
-              render();
-              alert(`Gameweek finalized: Gross ${gross} • Hits -${hits} • Net ${net}`);
-            }catch(err){
-              alert('Invalid JSON. Use a valid object like {"1":{"minutes":90,"goals":1}}');
-            }
-          });
-        }
-
+      const clearPendingBtn = event.target.closest('#clear-pending');
+      if (clearPendingBtn) {
+        state.pending = [];
+        saveState();
+        render();
         return;
       }
 
