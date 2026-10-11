@@ -1,5 +1,3 @@
-/* Version 7 — full single-file logic (paste into app.js) */
-
 /* =========
    Data / constants
    ========= */
