@@ -3,25 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EPL Fantasy — Version 2</title>
+  <title>EPL Fantasy — Version 3</title>
   <style>
     :root{
       --bg:#071322;
       --bg2:#0a1930;
       --panel:#0f1d2d;
-      --line: rgba(255,255,255,0.08);
+      --panel2:#102235;
+      --line:rgba(255,255,255,0.08);
       --text:#edf6ff;
       --muted:#afc1d9;
       --accent:#5f3db9;
-      --accent2:#7a5ce4;
+      --accent2:#7f5de4;
       --green1:#0d3a26;
       --green2:#145a37;
       --danger:#d54a4a;
-      --shadow:0 18px 40px rgba(0,0,0,0.4);
+      --warning:#f3b93b;
+      --shadow:0 18px 40px rgba(0,0,0,0.38);
       --radius:14px;
     }
 
     *{ box-sizing:border-box; }
+
     html,body{
       margin:0;
       min-height:100%;
@@ -34,6 +37,10 @@
       padding:18px;
     }
 
+    button,input,textarea{
+      font:inherit;
+    }
+
     #app{
       max-width:1320px;
       margin:0 auto;
@@ -43,8 +50,8 @@
       background:rgba(255,255,255,0.02);
       border:1px solid var(--line);
       border-radius:18px;
-      box-shadow:var(--shadow);
       overflow:hidden;
+      box-shadow:var(--shadow);
     }
 
     .topbar{
@@ -52,12 +59,12 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:10px;
       padding:14px 18px;
+      flex-wrap:wrap;
     }
 
-    .brand{
+    .brand-title{
       display:flex;
       align-items:center;
       gap:12px;
@@ -66,11 +73,11 @@
     }
 
     .gw-pill{
-      background:rgba(255,255,255,0.1);
-      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.12);
       border-radius:999px;
       padding:6px 10px;
-      font-size:0.7rem;
+      font-size:0.72rem;
       font-weight:700;
     }
 
@@ -81,7 +88,7 @@
       flex-wrap:wrap;
     }
 
-    .sticker{
+    .stat{
       background:rgba(255,255,255,0.06);
       border:1px solid rgba(255,255,255,0.08);
       border-radius:8px;
@@ -94,23 +101,24 @@
       gap:8px;
       flex-wrap:wrap;
       padding:10px 18px 0;
-      background:rgba(255,255,255,0.02);
       border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,0.02);
     }
 
     .tab-btn{
-      padding:10px 14px;
       border:1px solid rgba(255,255,255,0.05);
-      border-radius:10px 10px 0 0;
       background:transparent;
       color:var(--muted);
-      cursor:pointer;
+      border-radius:10px 10px 0 0;
+      padding:10px 14px;
       font-weight:600;
+      cursor:pointer;
     }
 
     .tab-btn.active{
       background:rgba(255,255,255,0.03);
       color:var(--text);
+      border-color:rgba(255,255,255,0.08);
     }
 
     .content{
@@ -147,8 +155,8 @@
     .chip{
       border-radius:999px;
       background:rgba(255,255,255,0.02);
-      color:var(--text);
       border:1px solid rgba(255,255,255,0.05);
+      color:var(--text);
       padding:6px 10px;
       font-size:0.72rem;
       cursor:pointer;
@@ -174,7 +182,7 @@
       content:"";
       position:absolute;
       inset:12px;
-      border:1px solid rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.05);
       border-radius:8px;
       pointer-events:none;
     }
@@ -481,7 +489,7 @@
     const MAX_CLUB = 3;
     const BUDGET = 100.0;
     const HIT_COST = 4;
-    const STORAGE_KEY = 'epl_version2_state';
+    const STORAGE_KEY = 'epl_version3_state';
 
     const defaultState = {
       activeTab: 'pick-team',
@@ -506,8 +514,7 @@
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(!raw) return JSON.parse(JSON.stringify(defaultState));
-        const parsed = JSON.parse(raw);
-        return Object.assign({}, defaultState, parsed);
+        return Object.assign({}, defaultState, JSON.parse(raw));
       }catch{
         return JSON.parse(JSON.stringify(defaultState));
       }
@@ -524,7 +531,12 @@
     }
 
     function esc(str=''){
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
     }
 
     function computeSquadValue(arr){
@@ -601,21 +613,68 @@
       return { allowed:true };
     }
 
+    function openModal(title, bodyHtml, onConfirm = null, confirmText = 'Close', hideCancel = true){
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+
+      overlay.innerHTML = `
+        <div class="modal">
+          <div class="modal-head">
+            <strong>${esc(title)}</strong>
+            <button class="button" data-close-modal>Close</button>
+          </div>
+          <div class="modal-body">${bodyHtml}</div>
+          <div class="modal-actions">
+            ${hideCancel ? '' : '<button class="button" data-close-modal-cancel>Cancel</button>'}
+            <button class="button primary" data-confirm-modal>${esc(confirmText)}</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (event) => {
+        const close = event.target.closest('[data-close-modal]');
+        const closeCancel = event.target.closest('[data-close-modal-cancel]');
+        const confirm = event.target.closest('[data-confirm-modal]');
+        if (close || closeCancel || confirm || event.target === overlay){
+          overlay.remove();
+          if (confirm && onConfirm) onConfirm();
+        }
+      });
+    }
+
+    function showInfoModal(playerId){
+      const p = playerById(playerId);
+      if (!p) return;
+
+      const html = `
+        <div>
+          <div style="font-weight:700;font-size:1.1rem;">${esc(p.name)}</div>
+          <div style="color:var(--muted);margin-top:6px;">${esc(p.pos)} • ${esc(p.club)}</div>
+          <div style="margin-top:12px;color:var(--muted);">${esc(p.bio)}</div>
+          <div style="margin-top:12px;">Price: Br ${p.price}M</div>
+        </div>
+      `;
+
+      openModal(`${p.name}`, html, null, 'Close', true);
+    }
+
     function renderHeader(){
       const value = computeSquadValue(state.squad).toFixed(1);
 
       return `
         <div class="topbar">
-          <div class="brand">
+          <div class="brand-title">
             <span>EPL Fantasy</span>
             <span class="gw-pill">GW ${state.gameweek}</span>
           </div>
           <div class="topstats">
-            <div class="sticker">Bank <strong>Br ${state.bank.toFixed(1)}M</strong></div>
-            <div class="sticker">Value <strong>Br ${value}M</strong></div>
-            <div class="sticker">Transfers <strong>${state.freeTransfers} FT</strong></div>
-            <div class="sticker">Hits <strong>${state.transferPenalty > 0 ? '-' + state.transferPenalty + ' pts' : '0 pts'}</strong></div>
-            <button class="button primary" id="finalize-gw">Finalize GW</button>
+            <div class="stat">Bank <strong>Br ${state.bank.toFixed(1)}M</strong></div>
+            <div class="stat">Value <strong>Br ${value}M</strong></div>
+            <div class="stat">Transfers <strong>${state.freeTransfers} FT</strong></div>
+            <div class="stat">Hits <strong>${state.transferPenalty > 0 ? '-' + state.transferPenalty + ' pts' : '0 pts'}</strong></div>
+            <button id="finalize-gw" class="button primary">Finalize GW</button>
           </div>
         </div>
       `;
@@ -647,15 +706,15 @@
     }
 
     function emptyCards(count){
-      return Array.from({length:count}, () => `<div class="player-card empty">Empty</div>`).join('');
+      return Array.from({length:count}, () => '<div class="player-card empty">Empty</div>').join('');
     }
 
     function renderPitch(){
       const starters = buildStartingXI();
       const groups = { GK:[], DEF:[], MID:[], FWD:[] };
-      starters.map(id => playerById(id)).filter(Boolean).forEach(p => groups[p.pos].push(p));
 
-      const benchPlayers = state.squad.filter(id => !starters.includes(id)).map(id => {
+      starters.map(id => playerById(id)).filter(Boolean).forEach(p => groups[p.pos].push(p));
+      const benchHtml = state.squad.filter(id => !starters.includes(id)).map(id => {
         const p = playerById(id);
         return `<div class="bench-player">${esc(p.name)} • ${esc(p.pos)}</div>`;
       }).join('') || '<div class="bench-player">No bench players</div>';
@@ -674,12 +733,12 @@
           <div class="pitch-row">
             ${groups.FWD.length ? groups.FWD.map(pitchCard).join('') : emptyCards(3)}
           </div>
-          <div class="bench">${benchPlayers}</div>
+          <div class="bench">${benchHtml}</div>
         </div>
       `;
     }
 
-    function renderSquadSummary(){
+    function renderSummary(){
       const counts = getSquadCounts();
       return `
         <div class="panel">
@@ -687,7 +746,6 @@
           <div class="summary-row"><span>Squad Value</span><strong>Br ${computeSquadValue(state.squad).toFixed(1)}M</strong></div>
           <div class="summary-row"><span>Bank</span><strong>Br ${state.bank.toFixed(1)}M</strong></div>
           <div class="summary-row"><span>Players</span><strong>${state.squad.length}/15</strong></div>
-          <div class="summary-row"><span>Free slots</span><strong>${MAX_SQUAD - state.squad.length}</strong></div>
           <div class="summary-row"><span>Captain</span><strong>${playerById(state.captainId)?.name || '-'}</strong></div>
           <div class="summary-row"><span>Vice</span><strong>${playerById(state.viceId)?.name || '-'}</strong></div>
           <div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;">
@@ -745,9 +803,9 @@
         return `
           <div class="market-item">
             <div class="market-left">
-              <div class="avatar">${esc(player.name.split(' ').map(s => s[0]).slice(0,2).join(''))}</div>
+              <div class="avatar">${esc(player.name.split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase())}</div>
               <div>
-                <div style="font-weight:700">${esc(player.name)}</div>
+                <div style="font-weight:700;">${esc(player.name)}</div>
                 <div style="color:var(--muted);font-size:0.8rem;">${esc(player.pos)} • ${esc(player.club)}</div>
               </div>
             </div>
@@ -830,6 +888,7 @@
 
     function renderWelcome(){
       if (state.seenWelcome) return '';
+
       return `
         <div class="modal-overlay">
           <div class="modal">
@@ -855,7 +914,6 @@
 
       let content = '';
       if (state.activeTab === 'pick-team'){
-        const starters = buildStartingXI();
         content = `
           <div class="layout">
             <div>
@@ -863,11 +921,9 @@
                 <h3 class="card-title">My Team</h3>
                 ${renderPitch()}
               </div>
-              <div style="margin-top:12px;">
-                ${renderSquadGrid()}
-              </div>
+              <div style="margin-top:12px;">${renderSquadGrid()}</div>
             </div>
-            <div>${renderSquadSummary()}</div>
+            <div>${renderSummary()}</div>
           </div>
         `;
       } else if (state.activeTab === 'transfers'){
@@ -898,113 +954,6 @@
       `;
     }
 
-    function openPlayerModal(id){
-      const player = playerById(id);
-      if (!player) return;
-
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-
-      overlay.innerHTML = `
-        <div class="modal">
-          <div class="modal-head">
-            <strong>${esc(player.name)}</strong>
-            <button class="button" data-close-player>Close</button>
-          </div>
-          <div class="modal-body">
-            <div style="color:var(--muted);font-size:0.8rem;">${esc(player.pos)} • ${esc(player.club)}</div>
-            <div style="margin-top:10px;">${esc(player.bio)}</div>
-            <div style="margin-top:12px;">Price: Br ${player.price}M</div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="button" data-stage-buy="${player.id}">Stage Buy</button>
-              <button class="button" data-stage-sell="${player.id}">Stage Sell</button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(overlay);
-
-      overlay.addEventListener('click', (event) => {
-        if (event.target === overlay || event.target.closest('[data-close-player]')) {
-          overlay.remove();
-        }
-      });
-    }
-
-    function openFinaliseModal(){
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay';
-
-      modal.innerHTML = `
-        <div class="modal">
-          <div class="modal-head">
-            <strong>Finalize Gameweek</strong>
-            <button class="button" data-close-finalize>Close</button>
-          </div>
-          <div class="modal-body">
-            <label style="display:block;margin-bottom:8px;color:var(--muted);">Paste JSON like {"1":{"minutes":90,"goals":1,"assists":1}}</label>
-            <textarea id="gw-json">{ "1": { "minutes": 90, "goals": 1 }, "9": { "minutes": 90, "assists": 1 } }</textarea>
-          </div>
-          <div class="modal-actions">
-            <button class="button primary" id="run-finalize">Run Finalize</button>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(modal);
-
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal || event.target.closest('[data-close-finalize]')) {
-          modal.remove();
-        }
-      });
-
-      modal.querySelector('#run-finalize').addEventListener('click', () => {
-        try{
-          const raw = modal.querySelector('#gw-json').value;
-          const data = JSON.parse(raw);
-          let gross = 0;
-
-          for (const key in data){
-            const id = Number(key);
-            const p = playerById(id);
-            if (!p) continue;
-            const stats = data[key];
-            let points = 0;
-
-            if ((stats.minutes || 0) > 0) points += 1;
-            if ((stats.minutes || 0) >= 60) points += 2;
-
-            if ((stats.goals || 0) > 0){
-              if (p.pos === 'GK') points += 10 * (stats.goals || 0);
-              if (p.pos === 'DEF') points += 6 * (stats.goals || 0);
-              if (p.pos === 'MID') points += 5 * (stats.goals || 0);
-              if (p.pos === 'FWD') points += 4 * (stats.goals || 0);
-            }
-
-            if ((stats.assists || 0) > 0) points += 3 * (stats.assists || 0);
-            gross += points;
-          }
-
-          const hits = state.transferPenalty || 0;
-          const net = gross - hits;
-
-          state.history.push({ gw: state.gameweek, gross, hits, net });
-          state.gameweek += 1;
-          state.pending = [];
-          state.transferPenalty = 0;
-          state.transfersMade = 0;
-          saveState();
-          modal.remove();
-          render();
-          alert(`Gameweek finalized: Gross ${gross} • Hits -${hits} • Net ${net}`);
-        }catch{
-          alert('Invalid JSON. Use an object like {"1":{"minutes":90,"goals":1}}');
-        }
-      });
-    }
-
     document.addEventListener('click', (event) => {
       const tabBtn = event.target.closest('.tab-btn');
       if (tabBtn) {
@@ -1018,12 +967,6 @@
         state.seenWelcome = true;
         saveState();
         render();
-        return;
-      }
-
-      const finaliseBtn = event.target.closest('#finalize-gw');
-      if (finaliseBtn) {
-        openFinaliseModal();
         return;
       }
 
@@ -1047,7 +990,7 @@
 
       const infoBtn = event.target.closest('[data-info]');
       if (infoBtn) {
-        openPlayerModal(Number(infoBtn.dataset.info));
+        showInfoModal(Number(infoBtn.dataset.info));
         return;
       }
 
@@ -1056,11 +999,13 @@
         const id = Number(stageBuyBtn.dataset.stageBuy);
         const player = playerById(id);
         if (!player) return;
+
         const ok = canAddPlayer(player);
         if (!ok.allowed) {
           alert(ok.reason);
           return;
         }
+
         state.pending.push({ id: Date.now() + Math.random(), type:'buy', playerId:id });
         saveState();
         render();
@@ -1071,7 +1016,9 @@
       if (stageSellBtn) {
         const id = Number(stageSellBtn.dataset.stageSell);
         if (!state.squad.includes(id)) return;
-        if (!state.pending.some(item => item.type === 'sell' && item.playerId === id)) {
+
+        const alreadyPending = state.pending.some(item => item.type === 'sell' && item.playerId === id);
+        if (!alreadyPending) {
           state.pending.push({ id: Date.now() + Math.random(), type:'sell', playerId:id });
         }
         saveState();
@@ -1113,6 +1060,85 @@
         state.pending = [];
         saveState();
         render();
+        return;
+      }
+
+      const finalizeBtn = event.target.closest('#finalize-gw');
+      if (finalizeBtn) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+
+        modal.innerHTML = `
+          <div class="modal">
+            <div class="modal-head">
+              <strong>Finalize Gameweek</strong>
+              <button class="button" data-close-finalize>Close</button>
+            </div>
+            <div class="modal-body">
+              <label style="display:block;margin-bottom:8px;color:var(--muted);">Paste JSON like {"1":{"minutes":90,"goals":1}}</label>
+              <textarea id="gw-json">{ "1": { "minutes": 90, "goals": 1 }, "9": { "minutes": 90, "assists": 1 } }</textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="button primary" id="run-finalize">Run Finalize</button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal || event.target.closest('[data-close-finalize]')) {
+            modal.remove();
+          }
+        });
+
+        const runBtn = modal.querySelector('#run-finalize');
+        if (runBtn) {
+          runBtn.addEventListener('click', () => {
+            try{
+              const raw = modal.querySelector('#gw-json').value;
+              const data = JSON.parse(raw);
+
+              let gross = 0;
+              for (const rawKey in data) {
+                const id = Number(rawKey);
+                const player = playerById(id);
+                if (!player) continue;
+                const stats = data[rawKey];
+                let points = 0;
+
+                if ((stats.minutes || 0) > 0) points += 1;
+                if ((stats.minutes || 0) >= 60) points += 2;
+                if ((stats.goals || 0) > 0) {
+                  if (player.pos === 'GK') points += 10 * (stats.goals || 0);
+                  if (player.pos === 'DEF') points += 6 * (stats.goals || 0);
+                  if (player.pos === 'MID') points += 5 * (stats.goals || 0);
+                  if (player.pos === 'FWD') points += 4 * (stats.goals || 0);
+                }
+                if ((stats.assists || 0) > 0) points += 3 * (stats.assists || 0);
+
+                gross += points;
+              }
+
+              const hits = state.transferPenalty || 0;
+              const net = gross - hits;
+
+              state.history.push({ gw: state.gameweek, gross, hits, net });
+              state.gameweek += 1;
+              state.pending = [];
+              state.transferPenalty = 0;
+              state.transfersMade = 0;
+
+              saveState();
+              modal.remove();
+              render();
+              alert(`Completed GW ${state.gameweek - 1}: Gross ${gross} • Hits -${hits} • Net ${net}`);
+            } catch {
+              alert('Invalid JSON. Use the example format shown.');
+            }
+          });
+        }
+
         return;
       }
 
